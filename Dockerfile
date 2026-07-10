@@ -27,7 +27,7 @@ COPY . .
 
 # Installer les dépendances PHP (sans exécuter les scripts qui font planter la compilation car la base de données n'est pas encore connectée)
 ENV COMPOSER_ALLOW_SUPERUSER=1
-RUN composer install --no-dev --optimize-autoloader --no-scripts
+RUN composer install --no-dev --optimize-autoloader --no-scripts --ignore-platform-reqs
 
 # Installer les dépendances JS et compiler
 RUN npm install
