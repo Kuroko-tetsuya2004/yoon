@@ -6,11 +6,12 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     libpq-dev \
+    libzip-dev \
     zip \
     unzip \
     nodejs \
     npm \
-    && docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd \
+    && docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd zip \
     && apt-get clean
 
 # Activer le module rewrite d'Apache (pour Laravel)
@@ -24,8 +25,11 @@ WORKDIR /var/www/html
 # Copier les fichiers de l'application
 COPY . .
 
-# Installer les dépendances PHP et JS, puis compiler
-RUN composer install --no-dev --optimize-autoloader
+# Installer les dépendances PHP (sans exécuter les scripts qui font planter la compilation car la base de données n'est pas encore connectée)
+ENV COMPOSER_ALLOW_SUPERUSER=1
+RUN composer install --no-dev --optimize-autoloader --no-scripts
+
+# Installer les dépendances JS et compiler
 RUN npm install
 RUN npm run build
 
@@ -41,8 +45,8 @@ RUN sed -i 's/<VirtualHost \*:80>/<VirtualHost \*:${PORT}>/g' /etc/apache2/sites
 # Donner les bonnes permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Créer un script de démarrage qui lance les migrations avant Apache
-RUN echo '#!/bin/bash\nphp artisan migrate --force\nphp artisan storage:link\napache2-foreground' > /usr/local/bin/start.sh
+# Créer un script de démarrage qui lance les scripts Composer et les migrations avant Apache
+RUN echo '#!/bin/bash\nphp artisan package:discover --ansi\nphp artisan migrate --force\nphp artisan storage:link\napache2-foreground' > /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
 
 CMD ["/usr/local/bin/start.sh"]
