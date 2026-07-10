@@ -1,16 +1,48 @@
-FROM serversideup/php:8.2-fpm-nginx
+FROM php:8.2-apache
 
-# Revenir en root pour installer Node.js (nécessaire pour compiler le frontend Vite) et PostgreSQL
-USER root
-RUN apt-get update && apt-get install -y nodejs npm postgresql-client && apt-get clean
+# Installer les dépendances système, Node.js et PostgreSQL client
+RUN apt-get update && apt-get install -y \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libpq-dev \
+    zip \
+    unzip \
+    nodejs \
+    npm \
+    && docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd \
+    && apt-get clean
 
-# Revenir à l'utilisateur www-data (sécurité)
-USER www-data
+# Activer le module rewrite d'Apache (pour Laravel)
+RUN a2enmod rewrite
 
-# Copier tous les fichiers du projet
-COPY --chown=www-data:www-data . /var/www/html
+# Installer Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Installer les dépendances PHP et compiler le frontend
+WORKDIR /var/www/html
+
+# Copier les fichiers de l'application
+COPY . .
+
+# Installer les dépendances PHP et JS, puis compiler
 RUN composer install --no-dev --optimize-autoloader
 RUN npm install
 RUN npm run build
+
+# Configurer Apache pour pointer vers le dossier public de Laravel
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+# Configurer Apache pour écouter sur le port dynamique fourni par Render ($PORT)
+RUN sed -i 's/Listen 80/Listen ${PORT}/g' /etc/apache2/ports.conf
+RUN sed -i 's/<VirtualHost \*:80>/<VirtualHost \*:${PORT}>/g' /etc/apache2/sites-available/000-default.conf
+
+# Donner les bonnes permissions
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Créer un script de démarrage qui lance les migrations avant Apache
+RUN echo '#!/bin/bash\nphp artisan migrate --force\nphp artisan storage:link\napache2-foreground' > /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
+
+CMD ["/usr/local/bin/start.sh"]

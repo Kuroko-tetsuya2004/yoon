@@ -15,7 +15,6 @@ services:
     name: yoon-web
     env: docker
     plan: free
-    dockerCommand: "php artisan migrate --force && php artisan storage:link && /init"
     envVars:
       - key: APP_NAME
         value: Yoon
@@ -41,32 +40,22 @@ services:
       - key: SESSION_DRIVER
         value: redis
       - key: QUEUE_CONNECTION
-        value: redis
+        value: sync
       - key: BROADCAST_CONNECTION
         value: reverb
-
-  - type: worker
-    name: yoon-queue
-    env: docker
-    plan: free
-    dockerCommand: "php artisan queue:work --sleep=3 --tries=3"
-    envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: yoon-db
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: yoon-redis
-          property: connectionString
 
   - type: web
     name: yoon-reverb
     env: docker
     plan: free
-    dockerCommand: "php artisan reverb:start --host=0.0.0.0 --port=8080"
+    dockerCommand: "php artisan reverb:start --host=0.0.0.0 --port=$PORT"
     envVars:
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DATABASE_URL
+        fromDatabase:
+          name: yoon-db
+          property: connectionString
       - key: REDIS_URL
         fromService:
           type: redis
