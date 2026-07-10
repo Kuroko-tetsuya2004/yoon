@@ -8,20 +8,14 @@ services:
   - type: redis
     name: yoon-redis
     plan: free
+    ipAllowList: []
     maxmemoryPolicy: noeviction
 
   - type: web
     name: yoon-web
-    env: php
+    env: docker
     plan: free
-    buildCommand: |
-      composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
-      npm install
-      npm run build
-      php artisan key:generate --force
-      php artisan migrate --force
-      php artisan storage:link
-    startCommand: "heroku-php-nginx -C nginx.conf public/"
+    dockerCommand: "php artisan migrate --force && php artisan storage:link && /init"
     envVars:
       - key: APP_NAME
         value: Yoon
@@ -53,10 +47,9 @@ services:
 
   - type: worker
     name: yoon-queue
-    env: php
+    env: docker
     plan: free
-    buildCommand: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
-    startCommand: "php artisan queue:work --sleep=3 --tries=3"
+    dockerCommand: "php artisan queue:work --sleep=3 --tries=3"
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -70,10 +63,9 @@ services:
 
   - type: web
     name: yoon-reverb
-    env: php
+    env: docker
     plan: free
-    buildCommand: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
-    startCommand: "php artisan reverb:start --host=0.0.0.0 --port=$PORT"
+    dockerCommand: "php artisan reverb:start --host=0.0.0.0 --port=8080"
     envVars:
       - key: REDIS_URL
         fromService:
