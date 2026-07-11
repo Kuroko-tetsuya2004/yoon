@@ -18,8 +18,9 @@ class DashboardController extends Controller
         }
 
         $livraisons = Livraison::where('livreur_id', Auth::id())
+                               ->whereNotIn('statut_livraison', ['livree', 'retour_boutique'])
                                ->with(['commande.repere', 'commande.gaz', 'commande.pondereux', 'commande.materiel'])
-                               ->orderByRaw("CASE statut_livraison WHEN 'en_attente' THEN 1 WHEN 'en_route' THEN 2 WHEN 'retour_boutique' THEN 3 WHEN 'livree' THEN 4 ELSE 5 END")
+                               ->orderByRaw("CASE statut_livraison WHEN 'en_attente' THEN 1 WHEN 'en_route' THEN 2 ELSE 3 END")
                                ->get();
 
         $proposition = \App\Models\PropositionLivraison::where('livreur_id', Auth::id())
@@ -40,7 +41,6 @@ class DashboardController extends Controller
             }
         }
 
-        // Pour les livraisons en cours, on récupère aussi le partenaire
         $livraisonsAvecPartenaire = $livraisons->map(function ($livraison) {
             $commande = $livraison->commande;
             $partenaire = null;
@@ -55,10 +55,56 @@ class DashboardController extends Controller
             return $livraison;
         });
 
+        // Nouvelles Statistiques pour le Livreur
+        $toutesLesLivraisons = Livraison::where('livreur_id', Auth::id())->with('commande')->get();
+        $livraisonsTerminees = $toutesLesLivraisons->filter(function($l) {
+            return in_array($l->statut_livraison, ['livree', 'retour_boutique']);
+        });
+
+        $stats = [
+            'total_courses' => $livraisonsTerminees->count(),
+            'gains_estimes' => $livraisonsTerminees->sum(function($l) { return $l->commande->frais_livraison; }),
+            'en_cours' => $livraisons->count(),
+        ];
+
+        // Graphique des courses sur 7 jours
+        $coursesGraphique = collect();
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i)->format('Y-m-d');
+            $count = Livraison::where('livreur_id', Auth::id())
+                ->whereIn('statut_livraison', ['livree', 'retour_boutique'])
+                ->whereDate('updated_at', $date)
+                ->count();
+            $coursesGraphique->push([
+                'date' => now()->subDays($i)->format('d M'),
+                'courses' => $count
+            ]);
+        }
+
+        // Historique des dernières courses
+        $historique = Livraison::where('livreur_id', Auth::id())
+            ->whereIn('statut_livraison', ['livree', 'retour_boutique'])
+            ->with(['commande.repere'])
+            ->orderBy('updated_at', 'desc')
+            ->take(5)
+            ->get()
+            ->map(function($l) {
+                return [
+                    'id' => $l->id,
+                    'date' => $l->updated_at->format('d/m/Y H:i'),
+                    'client' => $l->commande->client->name ?? 'Inconnu',
+                    'gains' => $l->commande->frais_livraison,
+                    'statut' => $l->statut_livraison
+                ];
+            });
+
         return inertia('Livreur/Dashboard', [
             'livraisons' => $livraisonsAvecPartenaire,
             'proposition' => $proposition,
-            'partenaireProposition' => $partenaire
+            'partenaireProposition' => $partenaire,
+            'stats' => $stats,
+            'coursesGraphique' => $coursesGraphique,
+            'historique' => $historique
         ]);
     }
 

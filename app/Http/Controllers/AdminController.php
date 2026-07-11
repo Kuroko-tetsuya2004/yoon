@@ -15,7 +15,7 @@ class AdminController extends Controller
 
         $stats = [
             'total_commandes' => Commande::count(),
-            'ca_genere' => Commande::where('statut', 'terminee')->sum('montant_total'),
+            'ca_genere' => Commande::where('statut', 'livree')->sum('montant_total'),
             'utilisateurs_actifs' => User::where('role', 'client')->count(),
             'partenaires_actifs' => User::where('role', 'partenaire')->where('statut_validation', 'valide')->count(),
             'partenaires_en_attente' => User::where('role', 'partenaire')->where('statut_validation', 'en_attente')->count(),
@@ -24,12 +24,50 @@ class AdminController extends Controller
             'litiges_ouverts' => Litige::where('statut', 'ouvert')->count(),
         ];
 
+        // Données pour le graphique (7 derniers jours)
+        $ventesSeptDerniersJours = collect();
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i)->format('Y-m-d');
+            $total = Commande::where('statut', 'livree')
+                ->whereDate('created_at', $date)
+                ->sum('montant_total');
+            $ventesSeptDerniersJours->push([
+                'date' => now()->subDays($i)->format('d M'),
+                'ca' => $total
+            ]);
+        }
+
+        // Dernières commandes
+        $dernieresCommandes = Commande::with(['client', 'livraison.livreur', 'gaz.partenaire', 'pondereux.partenaire', 'materiel.partenaire'])
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get()
+            ->map(function ($commande) {
+                $partenaire = null;
+                if ($commande->type_commande === 'gaz' && $commande->gaz) $partenaire = $commande->gaz->partenaire;
+                elseif ($commande->type_commande === 'pondereux' && $commande->pondereux) $partenaire = $commande->pondereux->partenaire;
+                elseif ($commande->type_commande === 'materiel' && $commande->materiel) $partenaire = $commande->materiel->partenaire;
+
+                return [
+                    'id' => $commande->id,
+                    'date' => $commande->created_at->format('d/m/Y H:i'),
+                    'client' => $commande->client ? $commande->client->name : 'Inconnu',
+                    'montant' => $commande->montant_total,
+                    'statut' => $commande->statut,
+                    'partenaire' => $partenaire ? $partenaire->name : 'N/A',
+                    'livreur' => ($commande->livraison && $commande->livraison->livreur) ? $commande->livraison->livreur->name : 'Non assigné',
+                    'type' => ucfirst($commande->type_commande)
+                ];
+            });
+
         $comptesEnAttente = User::whereIn('role', ['partenaire', 'livreur'])->where('statut_validation', 'en_attente')->orderBy('created_at', 'desc')->get();
         $partenaires = User::where('role', 'partenaire')->where('statut_validation', '!=', 'en_attente')->orderBy('created_at', 'desc')->get();
         $livreurs = User::where('role', 'livreur')->where('statut_validation', '!=', 'en_attente')->orderBy('created_at', 'desc')->get();
 
         return inertia('Admin/Dashboard', [
             'stats' => $stats,
+            'ventesGraphique' => $ventesSeptDerniersJours,
+            'dernieresCommandes' => $dernieresCommandes,
             'comptesEnAttente' => $comptesEnAttente,
             'partenaires' => $partenaires,
             'livreurs' => $livreurs

@@ -1,19 +1,21 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Package, Users, Store, Bike, AlertTriangle, TrendingUp, Clock, CheckCircle } from 'lucide-react';
 
-export default function Dashboard({ stats, comptesEnAttente, partenaires, livreurs }) {
+export default function Dashboard({ stats, ventesGraphique, dernieresCommandes, comptesEnAttente, partenaires, livreurs }) {
     const formatNumber = (num) => Number(num).toLocaleString('fr-FR');
 
     const statCards = [
-        { label: "Chiffre d'affaires", value: `${formatNumber(stats.ca_genere)} FCFA`, icon: '💰', color: 'text-orange-600', bg: 'bg-orange-50' },
-        { label: "Total Commandes", value: stats.total_commandes, icon: '📦', color: 'text-slate-700', bg: 'bg-slate-100' },
-        { label: "Clients Actifs", value: stats.utilisateurs_actifs, icon: '👥', color: 'text-slate-700', bg: 'bg-slate-100' },
-        { label: "Partenaires Validés", value: stats.partenaires_actifs, icon: '✅', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-        { label: "Partenaires En Attente", value: stats.partenaires_en_attente, icon: '⏳', color: 'text-amber-600', bg: 'bg-amber-50' },
-        { label: "Litiges Ouverts", value: stats.litiges_ouverts, icon: '⚠️', color: 'text-red-600', bg: 'bg-red-50' },
-        { label: "Livreurs Validés", value: stats.livreurs_actifs, icon: '✅', color: 'text-blue-600', bg: 'bg-blue-50' },
-        { label: "Livreurs En Attente", value: stats.livreurs_en_attente, icon: '⏳', color: 'text-amber-600', bg: 'bg-amber-50' },
+        { label: "Chiffre d'affaires", value: `${formatNumber(stats.ca_genere)} FCFA`, icon: <TrendingUp size={24} />, color: 'text-orange-600', bg: 'bg-orange-50' },
+        { label: "Total Commandes", value: stats.total_commandes, icon: <Package size={24} />, color: 'text-slate-700', bg: 'bg-slate-100' },
+        { label: "Clients Actifs", value: stats.utilisateurs_actifs, icon: <Users size={24} />, color: 'text-slate-700', bg: 'bg-slate-100' },
+        { label: "Partenaires Validés", value: stats.partenaires_actifs, icon: <Store size={24} />, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+        { label: "Partenaires En Attente", value: stats.partenaires_en_attente, icon: <Clock size={24} />, color: 'text-amber-600', bg: 'bg-amber-50' },
+        { label: "Litiges Ouverts", value: stats.litiges_ouverts, icon: <AlertTriangle size={24} />, color: 'text-red-600', bg: 'bg-red-50' },
+        { label: "Livreurs Validés", value: stats.livreurs_actifs, icon: <Bike size={24} />, color: 'text-blue-600', bg: 'bg-blue-50' },
+        { label: "Livreurs En Attente", value: stats.livreurs_en_attente, icon: <Clock size={24} />, color: 'text-amber-600', bg: 'bg-amber-50' },
     ];
 
     return (
@@ -42,6 +44,79 @@ export default function Dashboard({ stats, comptesEnAttente, partenaires, livreu
                         <div className="stat-card-label text-sm text-slate-500 font-medium">{stat.label}</div>
                     </motion.div>
                 ))}
+            </div>
+
+            {/* Graphique d'Évolution du CA */}
+            <div className="mb-12 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h2 className="text-lg font-semibold text-slate-800 mb-6 flex items-center gap-2">
+                    <TrendingUp className="text-indigo-600" /> Évolution du Chiffre d'Affaires (7 derniers jours)
+                </h2>
+                <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={ventesGraphique} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                            <defs>
+                                <linearGradient id="colorCa" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.3}/>
+                                    <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
+                                </linearGradient>
+                            </defs>
+                            <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                            <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value.toLocaleString('fr-FR')}`} />
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                            <Tooltip 
+                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                formatter={(value) => [`${Number(value).toLocaleString('fr-FR')} FCFA`, "Chiffre d'affaires"]}
+                            />
+                            <Area type="monotone" dataKey="ca" stroke="#4f46e5" strokeWidth={3} fillOpacity={1} fill="url(#colorCa)" />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
+
+            {/* Dernières Commandes */}
+            <div className="mb-12 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="px-6 py-4 border-b border-slate-200 bg-slate-50">
+                    <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+                        <Package className="text-slate-600" /> Dernières Commandes (Top 5)
+                    </h2>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-white border-b border-slate-200 text-sm font-medium text-slate-500">
+                                <th className="p-4">ID</th>
+                                <th className="p-4">Date</th>
+                                <th className="p-4">Client</th>
+                                <th className="p-4">Boutique</th>
+                                <th className="p-4">Livreur</th>
+                                <th className="p-4">Montant</th>
+                                <th className="p-4">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 text-sm">
+                            {dernieresCommandes.map(cmd => (
+                                <tr key={cmd.id} className="hover:bg-slate-50 transition-colors">
+                                    <td className="p-4 font-medium text-slate-900">#{cmd.id}</td>
+                                    <td className="p-4 text-slate-600">{cmd.date}</td>
+                                    <td className="p-4 text-slate-900">{cmd.client}</td>
+                                    <td className="p-4 text-emerald-700 font-medium">{cmd.partenaire} <span className="text-xs text-slate-400 font-normal">({cmd.type})</span></td>
+                                    <td className="p-4 text-blue-700">{cmd.livreur}</td>
+                                    <td className="p-4 font-bold text-slate-900">{Number(cmd.montant).toLocaleString('fr-FR')} FCFA</td>
+                                    <td className="p-4">
+                                        <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
+                                            cmd.statut === 'livree' ? 'bg-emerald-100 text-emerald-800' :
+                                            cmd.statut === 'annulee' ? 'bg-red-100 text-red-800' :
+                                            cmd.statut === 'en_livraison' ? 'bg-blue-100 text-blue-800' :
+                                            'bg-amber-100 text-amber-800'
+                                        }`}>
+                                            {cmd.statut.replace('_', ' ')}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
