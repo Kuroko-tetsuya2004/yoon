@@ -41,6 +41,8 @@ services:
         value: "gdedjqiwhtskzgiuuovs"
       - key: VITE_REVERB_APP_KEY
         value: "4qkyonks9nnrsiz6qnck"
+      - key: VITE_REVERB_HOST
+        value: "yoon-reverb.onrender.com"
       - key: VITE_REVERB_PORT
         value: "443"
       - key: VITE_REVERB_SCHEME

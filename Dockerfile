@@ -29,7 +29,8 @@ COPY . .
 ENV COMPOSER_ALLOW_SUPERUSER=1
 RUN composer install --no-dev --optimize-autoloader --no-scripts --ignore-platform-reqs
 
-# Les dépendances JS et le dossier public/build sont déjà inclus dans le dépôt.
+# Installer les dépendances JS (sans les compiler encore car les variables d'environnement manquent)
+RUN npm install
 
 # Configurer Apache pour pointer vers le dossier public de Laravel
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
@@ -44,8 +45,8 @@ RUN sed -i 's/<VirtualHost \*:80>/<VirtualHost \*:${PORT}>/g' /etc/apache2/sites
 # Donner les bonnes permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Créer un script de démarrage qui prépare l'application avant Apache
-RUN echo '#!/bin/bash\nphp artisan optimize:clear\nphp artisan package:discover --ansi\nphp artisan migrate --force\nphp artisan storage:link\nchown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache\nchmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache\napache2-foreground' > /usr/local/bin/start.sh
+# Créer un script de démarrage qui compile le JS et prépare l'application avant Apache
+RUN echo '#!/bin/bash\nnpm run build\nphp artisan optimize:clear\nphp artisan package:discover --ansi\nphp artisan migrate --force\nphp artisan storage:link\nchown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public/build\nchmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public/build\napache2-foreground' > /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
 
 CMD ["/usr/local/bin/start.sh"]
