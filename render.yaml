@@ -9,7 +9,7 @@ services:
     name: yoon-redis
     plan: free
     ipAllowList: []
-    maxmemoryPolicy: noeviction
+    maxmemoryPolicy: allkeys-lru
 
   - type: web
     name: yoon-web
@@ -61,7 +61,7 @@ services:
       - key: CACHE_STORE
         value: redis
       - key: SESSION_DRIVER
-        value: redis
+        value: database
       - key: QUEUE_CONNECTION
         value: sync
       - key: BROADCAST_CONNECTION
