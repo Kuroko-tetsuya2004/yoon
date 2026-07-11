@@ -19,13 +19,13 @@ class DashboardController extends Controller
 
         $livraisons = Livraison::where('livreur_id', Auth::id())
                                ->whereNotIn('statut_livraison', ['livree', 'retour_boutique'])
-                               ->with(['commande.repere', 'commande.gaz', 'commande.pondereux', 'commande.materiel'])
+                               ->with(['commande.repere', 'commande.client', 'commande.gaz', 'commande.pondereux', 'commande.materiel'])
                                ->orderByRaw("CASE statut_livraison WHEN 'en_attente' THEN 1 WHEN 'en_route' THEN 2 ELSE 3 END")
                                ->get();
 
         $proposition = \App\Models\PropositionLivraison::where('livreur_id', Auth::id())
                                                        ->where('statut', 'en_attente')
-                                                       ->with(['commande.repere'])
+                                                       ->with(['commande.repere', 'commande.client'])
                                                        ->first();
 
         // Récupérer le partenaire pour la carte
