@@ -7,7 +7,7 @@ import FakePaymentModal from '@/Components/FakePaymentModal';
 export default function CreateGaz({ auth, reperes, produit, flash }) {
     const requiresOnlinePayment = !produit.partenaire?.propre_service_livraison;
 
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors, transform } = useForm({
         repere_id: reperes.find(r => r.is_default)?.id || (reperes.length > 0 ? reperes[0].id : ''),
         produit_id: produit.id,
         quantite: 1,
@@ -54,17 +54,24 @@ export default function CreateGaz({ auth, reperes, produit, flash }) {
 
     const submit = (e) => {
         e.preventDefault();
-        setData('frais_livraison', fraisLivraison);
+        transform((data) => ({
+            ...data,
+            frais_livraison: fraisLivraison
+        }));
         if (data.mode_paiement !== 'especes') {
             setIsPaymentModalOpen(true);
         } else {
-            post(route('commandes.gaz.store', { ...data, frais_livraison: fraisLivraison }));
+            post(route('commandes.gaz.store'));
         }
     };
 
     const handlePaymentSuccess = () => {
         setIsPaymentModalOpen(false);
-        post(route('commandes.gaz.store', { ...data, frais_livraison: fraisLivraison }));
+        transform((data) => ({
+            ...data,
+            frais_livraison: fraisLivraison
+        }));
+        post(route('commandes.gaz.store'));
     };
 
     return (
