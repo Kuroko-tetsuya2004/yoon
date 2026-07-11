@@ -51,9 +51,14 @@ class ProduitController extends Controller
             $validated['photo'] = $request->file('photo')->store('produits', 's3');
         }
 
-        $validated['est_disponible'] = $request->has('est_disponible');
-        if (!isset($validated['quantite_stock'])) {
+        if ($validated['categorie'] === 'materiel') {
+            $validated['est_disponible'] = true;
             $validated['quantite_stock'] = 0;
+        } else {
+            $validated['est_disponible'] = $request->has('est_disponible');
+            if (!isset($validated['quantite_stock'])) {
+                $validated['quantite_stock'] = 0;
+            }
         }
 
         $request->user()->produits()->create($validated);
@@ -89,9 +94,14 @@ class ProduitController extends Controller
             $validated['photo'] = $request->file('photo')->store('produits', 's3');
         }
 
-        $validated['est_disponible'] = $request->has('est_disponible');
-        if (!isset($validated['quantite_stock'])) {
+        if ($validated['categorie'] === 'materiel') {
+            $validated['est_disponible'] = true;
             $validated['quantite_stock'] = 0;
+        } else {
+            $validated['est_disponible'] = $request->has('est_disponible');
+            if (!isset($validated['quantite_stock'])) {
+                $validated['quantite_stock'] = 0;
+            }
         }
 
         $produit->update($validated);

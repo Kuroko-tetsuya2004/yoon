@@ -67,6 +67,10 @@ export default function Dashboard({ auth, livraisons, proposition, partenairePro
         if (auth?.user?.id && window.Echo) {
             const channel = window.Echo.private(`livreur.${auth.user.id}`)
                 .listen('NouvellePropositionLivraison', (e) => {
+                    try {
+                        const audio = new Audio('/notification.mp3');
+                        audio.play().catch(err => console.warn('Audio play failed:', err));
+                    } catch (err) {}
                     // Recharger uniquement les props nécessaires pour afficher la popup de proposition
                     router.reload({ only: ['proposition', 'partenaireProposition'] });
                 });
@@ -97,8 +101,8 @@ export default function Dashboard({ auth, livraisons, proposition, partenairePro
 
                 let waypoints = [];
 
-                if (livraison.statut_livraison === 'en_attente' && partLat && partLng) {
-                    waypoints = [L.latLng(livreurLat, livreurLng), L.latLng(partLat, partLng)];
+                if (livraison.statut_livraison === 'en_attente' && partLat && partLng && clientLat && clientLng) {
+                    waypoints = [L.latLng(livreurLat, livreurLng), L.latLng(partLat, partLng), L.latLng(clientLat, clientLng)];
                 } else if (livraison.statut_livraison === 'en_route' && clientLat && clientLng) {
                     waypoints = [L.latLng(livreurLat, livreurLng), L.latLng(clientLat, clientLng)];
                 } else if (livraison.statut_livraison === 'retour_boutique' && partLat && partLng && clientLat && clientLng) {
@@ -138,6 +142,17 @@ export default function Dashboard({ auth, livraisons, proposition, partenairePro
                         `;
                         L.marker([clientLat, clientLng]).addTo(mapInstance.current).bindPopup(popupContent).openPopup();
                     }
+                    
+                    if (livraison.statut_livraison === 'en_attente' && clientLat && clientLng) {
+                        const clientPhotoUrl = livraison.commande?.repere?.photo ? `/storage/${livraison.commande.repere.photo}` : null;
+                        const clientPopupContent = `
+                            <div style="text-align: center;">
+                                <b>Client final : ${livraison.commande?.client?.name}</b><br/>
+                                ${clientPhotoUrl ? `<img src="${clientPhotoUrl}" style="width:100px; height:auto; margin-top:5px; border-radius:4px;" />` : 'Pas de photo'}
+                            </div>
+                        `;
+                        L.marker([clientLat, clientLng]).addTo(mapInstance.current).bindPopup(clientPopupContent);
+                    }
                 }
             });
         }
@@ -153,7 +168,7 @@ export default function Dashboard({ auth, livraisons, proposition, partenairePro
     const getMapTitle = () => {
         if (!selectedLivraison) return "Itinéraire";
         switch (selectedLivraison.statut_livraison) {
-            case 'en_attente': return "Itinéraire vers la boutique";
+            case 'en_attente': return "Itinéraire complet (Vers boutique puis Client)";
             case 'en_route': return "Itinéraire vers le client";
             case 'retour_boutique': return "Itinéraire retour vers la boutique (Consigne)";
             default: return "Itinéraire";
@@ -234,10 +249,10 @@ export default function Dashboard({ auth, livraisons, proposition, partenairePro
                             <h3 className="text-xl font-bold text-blue-900 mb-2">🚀 Nouvelle course proposée !</h3>
                             <p className="text-blue-800 mb-4">Une commande à proximité nécessite un livreur.</p>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 bg-white p-4 rounded">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
                                     <h4 className="font-semibold text-gray-700 text-sm uppercase">Récupération (Boutique)</h4>
-                                    <p className="font-bold mt-1">{partenaireProposition?.name || 'Partenaire'}</p>
+                                    <p className="font-bold mt-1">{partenaireProposition?.name || proposition.adresse_depart}</p>
                                     <p className="text-sm text-gray-600">{partenaireProposition?.description_boutique || ''}</p>
                                     {partenaireProposition?.photo_devanture && (
                                         <img src={partenaireProposition.photo_devanture_url || `/storage/${partenaireProposition.photo_devanture}`} className="h-16 w-auto mt-2 rounded border" alt="Devanture" />
@@ -246,8 +261,19 @@ export default function Dashboard({ auth, livraisons, proposition, partenairePro
                                 <div>
                                     <h4 className="font-semibold text-gray-700 text-sm uppercase">Livraison (Client)</h4>
                                     <p className="font-bold mt-1">{proposition.commande.client.name}</p>
-                                    <p className="text-sm text-gray-900 mt-1">📍 {proposition.commande.repere?.adresse || 'Adresse non spécifiée'}</p>
+                                    <p className="text-sm text-gray-900 mt-1">📍 {proposition.adresse_arrivee}</p>
                                     <p className="text-sm text-gray-600">{proposition.commande.repere?.nom} - {proposition.commande.repere?.description}</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-white p-4 rounded mb-4 flex justify-between items-center shadow-sm">
+                                <div>
+                                    <p className="text-sm text-gray-500">Distance Totale</p>
+                                    <p className="font-bold text-lg text-blue-700">{proposition.distance_km || '?'} km</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-sm text-gray-500">Frais de Livraison</p>
+                                    <p className="font-bold text-lg text-emerald-600">{Number(proposition.frais_livraison || 0).toLocaleString('fr-FR')} FCFA</p>
                                 </div>
                             </div>
 

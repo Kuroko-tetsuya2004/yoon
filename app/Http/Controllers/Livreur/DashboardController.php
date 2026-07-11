@@ -39,6 +39,16 @@ class DashboardController extends Controller
             } elseif ($commande->type_commande === 'materiel' && $commande->materiel) {
                 $partenaire = \App\Models\User::find($commande->materiel->partenaire_id);
             }
+            
+            if ($partenaire && $commande->repere) {
+                $proposition->distance_km = round(\App\Services\LivraisonService::calculerDistanceRoutiere(
+                    $partenaire->latitude, $partenaire->longitude,
+                    $commande->repere->latitude, $commande->repere->longitude
+                ), 2);
+                $proposition->frais_livraison = $commande->frais_livraison;
+                $proposition->adresse_depart = $partenaire->adresse ?? 'Adresse boutique non définie';
+                $proposition->adresse_arrivee = $commande->repere->adresse ?? 'Adresse client non définie';
+            }
         }
 
         $livraisonsAvecPartenaire = $livraisons->map(function ($livraison) {

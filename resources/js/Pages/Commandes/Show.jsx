@@ -3,6 +3,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
+import 'leaflet-routing-machine';
 import { motion } from 'framer-motion';
 
 export default function Show({ auth, commande, flash }) {
@@ -19,41 +21,34 @@ export default function Show({ auth, commande, flash }) {
             const clientLat = commande.repere.latitude;
             const clientLng = commande.repere.longitude;
 
-            if (livreurLat && livreurLng) {
+            if (livreurLat && livreurLng && clientLat && clientLng) {
                 mapInstance.current = L.map(mapRef.current).setView([livreurLat, livreurLng], 14);
 
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '© OpenStreetMap'
                 }).addTo(mapInstance.current);
 
-                const livreurIcon = L.icon({
-                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                    iconSize: [25, 41],
-                    iconAnchor: [12, 41],
-                    popupAnchor: [1, -34],
-                    shadowSize: [41, 41]
-                });
-
-                markerLivreur.current = L.marker([livreurLat, livreurLng], { icon: livreurIcon })
-                    .addTo(mapInstance.current)
-                    .bindPopup("<b>Le livreur est ici</b>");
-                markerLivreur.current.openPopup();
-
-                if (clientLat && clientLng) {
-                    L.marker([clientLat, clientLng]).addTo(mapInstance.current)
-                        .bindPopup("<b>Votre position</b>");
-
-                    const bounds = L.latLngBounds([[livreurLat, livreurLng], [clientLat, clientLng]]);
-                    mapInstance.current.fitBounds(bounds, { padding: [50, 50] });
-                }
+                const routingControl = L.Routing.control({
+                    waypoints: [
+                        L.latLng(livreurLat, livreurLng),
+                        L.latLng(clientLat, clientLng)
+                    ],
+                    routeWhileDragging: false,
+                    addWaypoints: false,
+                    fitSelectedRoutes: true,
+                    show: false,
+                    lineOptions: { styles: [{ color: '#2563eb', weight: 6 }] }
+                }).addTo(mapInstance.current);
 
                 const interval = setInterval(() => {
                     fetch(route('commandes.livreur_location', commande.id))
                         .then(res => res.json())
                         .then(data => {
                             if (data.latitude && data.longitude) {
-                                markerLivreur.current.setLatLng([data.latitude, data.longitude]);
+                                routingControl.setWaypoints([
+                                    L.latLng(data.latitude, data.longitude),
+                                    L.latLng(clientLat, clientLng)
+                                ]);
                             }
                         })
                         .catch(err => console.error('Erreur tracking:', err));

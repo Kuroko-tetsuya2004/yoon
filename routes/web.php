@@ -66,7 +66,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('/commandes/{commande}/valider', [\App\Http\Controllers\Partenaire\CommandeController::class, 'valider'])->where('commande', '[0-9]+')->name('commandes.valider');
         Route::patch('/commandes/{commande}/refuser', [\App\Http\Controllers\Partenaire\CommandeController::class, 'refuser'])->where('commande', '[0-9]+')->name('commandes.refuser');
         Route::post('/commandes/{commande}/confirmer-retour', [\App\Http\Controllers\Partenaire\CommandeController::class, 'confirmerRetour'])->where('commande', '[0-9]+')->name('commandes.confirmer_retour');
-        Route::post('/commandes/{commande}/confirmer-recuperation', [\App\Http\Controllers\Partenaire\CommandeController::class, 'confirmerRecuperation'])->where('commande', '[0-9]+')->name('commandes.confirmer_recuperation');
+        Route::patch('/commandes/{commande}/confirmer-recuperation', [\App\Http\Controllers\Partenaire\CommandeController::class, 'confirmerRecuperation'])->name('partenaire.commandes.confirmer_recuperation');
+        
+        // Routes de livraison par le partenaire
+        Route::patch('/commandes/{commande}/livraison/statut', [\App\Http\Controllers\Partenaire\CommandeController::class, 'updateLivraisonStatut'])->name('partenaire.commandes.livraison.update');
+        Route::post('/location/update', [\App\Http\Controllers\Partenaire\CommandeController::class, 'updateLocation'])->name('partenaire.location.update');
         Route::resource('produits', \App\Http\Controllers\Partenaire\ProduitController::class);
         Route::post('produits/{produit}/restock', [\App\Http\Controllers\Partenaire\ProduitController::class, 'restock'])->name('produits.restock');
         Route::patch('produits/{produit}/toggle-status', [\App\Http\Controllers\Partenaire\ProduitController::class, 'toggleDisponibilite'])->name('produits.toggle-status');

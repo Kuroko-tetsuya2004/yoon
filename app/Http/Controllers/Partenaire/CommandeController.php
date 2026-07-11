@@ -165,6 +165,56 @@ class CommandeController extends Controller
             }
         }
 
-        return back()->with('error', 'Impossible de confirmer la récupération.');
+    public function updateLivraisonStatut(Request $request, Commande $commande)
+    {
+        if ($request->user()->role !== 'partenaire') abort(403);
+
+        $request->validate(['statut_livraison' => 'required|in:en_route,livree']);
+
+        // Vérifier si le partenaire a bien son propre service de livraison et est assigné
+        if ($commande->livraison && $commande->livraison->livreur_id === $request->user()->id) {
+            $statut = $request->statut_livraison;
+            $livraison = $commande->livraison;
+
+            if ($statut === 'en_route') {
+                $livraison->statut_livraison = 'en_route';
+                $livraison->heure_depart = now();
+                $commande->update(['statut' => 'en_livraison']);
+            } elseif ($statut === 'livree') {
+                $necessiteRetour = false;
+                if ($commande->type_commande === 'gaz' && $commande->gaz && $commande->gaz->contenant_vide) {
+                    $necessiteRetour = true;
+                }
+
+                if ($necessiteRetour) {
+                    $livraison->statut_livraison = 'retour_boutique';
+                    $livraison->heure_arrivee = now();
+                    $commande->update(['statut' => 'livree']);
+                    $commande->gaz->update(['contenant_recupere' => true]);
+                } else {
+                    $livraison->statut_livraison = 'livree';
+                    $livraison->heure_arrivee = now();
+                    $commande->update(['statut' => 'livree']);
+                }
+            }
+            $livraison->save();
+            return back()->with('success', 'Statut de livraison mis à jour.');
+        }
+
+        return back()->with('error', 'Vous n\'êtes pas autorisé à modifier cette livraison.');
+    }
+
+    public function updateLocation(\App\Http\Requests\UpdateLocationRequest $request)
+    {
+        if (\Illuminate\Support\Facades\Auth::user()->role !== 'partenaire') abort(403);
+
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $user->latitude = $request->latitude;
+        $user->longitude = $request->longitude;
+        $user->save();
+
+        broadcast(new \App\Events\LocationUpdated($user->id, $user->latitude, $user->longitude))->toOthers();
+
+        return response()->json(['success' => true]);
     }
 }

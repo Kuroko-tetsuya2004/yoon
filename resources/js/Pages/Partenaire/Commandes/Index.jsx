@@ -1,7 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
+import 'leaflet-routing-machine';
 
 export default function Index({ auth, commandes, flash }) {
     const { patch, post } = useForm();
@@ -25,11 +30,73 @@ export default function Index({ auth, commandes, flash }) {
         'annulee': 'bg-red-100 text-red-800',
     };
 
-    const valider = (id) => patch(route('partenaire.commandes.valider', id));
+    const valider = (id) => patch(route('commandes.valider', id));
     const confirmerRetour = (id) => {
-        post(route('partenaire.commandes.confirmer_retour', id), { onSuccess: () => setRetourModalId(null) });
+        post(route('commandes.confirmer_retour', id), { onSuccess: () => setRetourModalId(null) });
     };
-    const confirmerRecuperation = (id) => post(route('partenaire.commandes.confirmer_recuperation', id));
+    const confirmerRecuperation = (id) => patch(route('partenaire.commandes.confirmer_recuperation', id));
+
+    const [mapModalId, setMapModalId] = useState(null);
+    const mapRef = useRef(null);
+    const mapInstance = useRef(null);
+    const routingControl = useRef(null);
+
+    // Tracking GPS pour le partenaire s'il gère lui-même la livraison
+    useEffect(() => {
+        if (auth.user.propre_service_livraison) {
+            const sendLocationUpdate = () => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition((position) => {
+                        axios.post(route('partenaire.location.update'), {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude
+                        }).catch(e => console.warn('Location update failed', e));
+                    }, () => {}, { enableHighAccuracy: true });
+                }
+            };
+            sendLocationUpdate();
+            const interval = setInterval(sendLocationUpdate, 30000);
+            return () => clearInterval(interval);
+        }
+    }, [auth.user.propre_service_livraison]);
+
+    // Initialisation de la carte dans le Modal
+    useEffect(() => {
+        if (mapModalId && mapRef.current && !mapInstance.current) {
+            mapInstance.current = L.map(mapRef.current).setView([14.6928, -17.4467], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapInstance.current);
+
+            const commande = commandes.find(c => c.id === mapModalId);
+            if (commande && commande.repere && auth.user.latitude && auth.user.longitude) {
+                routingControl.current = L.Routing.control({
+                    waypoints: [
+                        L.latLng(auth.user.latitude, auth.user.longitude),
+                        L.latLng(commande.repere.latitude, commande.repere.longitude)
+                    ],
+                    routeWhileDragging: false,
+                    addWaypoints: false,
+                    fitSelectedRoutes: true,
+                    show: false,
+                    lineOptions: { styles: [{ color: '#10b981', weight: 6 }] }
+                }).addTo(mapInstance.current);
+
+                L.marker([commande.repere.latitude, commande.repere.longitude]).addTo(mapInstance.current).bindPopup("Client").openPopup();
+            }
+        }
+        return () => {
+            if (!mapModalId && mapInstance.current) {
+                mapInstance.current.remove();
+                mapInstance.current = null;
+                routingControl.current = null;
+            }
+        };
+    }, [mapModalId, commandes, auth.user]);
+
+    const updateLivraisonStatus = (id, status) => {
+        patch(route('partenaire.commandes.livraison.update', id), {
+            data: { statut_livraison: status }
+        });
+    };
 
     const submitRefus = (e, id) => {
         e.preventDefault();
@@ -176,7 +243,25 @@ export default function Index({ auth, commandes, flash }) {
                                                                 </button>
                                                             </div>
                                                         ) : (
-                                                            <span className="text-gray-400 text-xs">—</span>
+                                                            <div className="flex flex-col items-end space-y-2">
+                                                                {auth.user.propre_service_livraison && (commande.statut === 'acceptee' || commande.statut === 'en_livraison') && (
+                                                                    <>
+                                                                        <button onClick={() => setMapModalId(commande.id)} className="inline-flex items-center px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded shadow-sm transition">
+                                                                            📍 Voir Carte
+                                                                        </button>
+                                                                        {commande.statut === 'acceptee' && (
+                                                                            <button onClick={() => updateLivraisonStatus(commande.id, 'en_route')} className="inline-flex items-center px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-medium rounded shadow-sm transition">
+                                                                                🚚 Commencer Livraison
+                                                                            </button>
+                                                                        )}
+                                                                        {commande.statut === 'en_livraison' && (
+                                                                            <button onClick={() => updateLivraisonStatus(commande.id, 'livree')} className="inline-flex items-center px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded shadow-sm transition">
+                                                                                ✅ Marquer Livrée
+                                                                            </button>
+                                                                        )}
+                                                                    </>
+                                                                )}
+                                                            </div>
                                                         )}
 
                                                         {commande.type_commande === 'gaz' && commande.gaz?.contenant_vide && commande.livraison?.statut_livraison === 'retour_boutique' && (
@@ -269,6 +354,32 @@ export default function Index({ auth, commandes, flash }) {
                             <div className="flex justify-end space-x-2 mt-4">
                                 <button type="button" onClick={() => setRetourModalId(null)} className="px-4 py-2 bg-gray-200 text-gray-800 text-sm rounded hover:bg-gray-300 transition">Annuler</button>
                                 <button type="button" onClick={() => confirmerRetour(retourModalId)} className="px-4 py-2 bg-orange-500 text-white text-sm rounded hover:bg-orange-600 transition">Oui, consigne récupérée</button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+                {/* Modal Carte Itinéraire */}
+                {mapModalId && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4"
+                        onClick={() => setMapModalId(null)}
+                    >
+                        <motion.div 
+                            initial={{ y: 50, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            className="relative w-full max-w-4xl shadow-2xl rounded-xl bg-white overflow-hidden flex flex-col"
+                            style={{ height: '80vh' }}
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="bg-slate-800 p-4 flex justify-between items-center text-white">
+                                <h3 className="text-lg font-bold">Itinéraire de Livraison (Commande #{mapModalId})</h3>
+                                <button onClick={() => setMapModalId(null)} className="text-white hover:text-red-400 transition font-bold text-xl">&times;</button>
+                            </div>
+                            <div className="flex-grow relative">
+                                <div ref={mapRef} className="absolute inset-0 z-0"></div>
                             </div>
                         </motion.div>
                     </motion.div>

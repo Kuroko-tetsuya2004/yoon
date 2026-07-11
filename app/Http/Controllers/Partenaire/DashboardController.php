@@ -33,7 +33,7 @@ class DashboardController extends Controller
             'total_ventes' => $mesCommandes->count(),
             'ca_genere' => $ca_genere,
             'produits_actifs' => Produit::where('partenaire_id', $partenaireId)->where('est_disponible', true)->count(),
-            'ruptures_stock' => Produit::where('partenaire_id', $partenaireId)->where('quantite_stock', '<=', 5)->count(),
+            'ruptures_stock' => Produit::where('partenaire_id', $partenaireId)->where('categorie', '!=', 'materiel')->where('quantite_stock', '<=', 5)->count(),
         ];
 
         // Données pour le graphique (7 derniers jours)

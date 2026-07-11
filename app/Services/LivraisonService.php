@@ -28,6 +28,44 @@ class LivraisonService
     }
 
     /**
+     * Calcule la distance routière la plus courte via l'API OSRM. Fallback sur Haversine si échec.
+     */
+    public static function calculerDistanceRoutiere($lat1, $lon1, $lat2, $lon2)
+    {
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(3)->get("http://router.project-osrm.org/route/v1/driving/{$lon1},{$lat1};{$lon2},{$lat2}?overview=false");
+            if ($response->successful()) {
+                $data = $response->json();
+                if (isset($data['routes'][0]['distance'])) {
+                    return $data['routes'][0]['distance'] / 1000; // Return in km
+                }
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning("OSRM API failed, fallback to Haversine: " . $e->getMessage());
+        }
+        
+        return self::calculerDistance($lat1, $lon1, $lat2, $lon2);
+    }
+
+    /**
+     * Calcule les frais de livraison dynamiquement (1000f/km, max 3500f)
+     */
+    public static function calculerFraisLivraison($partenaire, $repere)
+    {
+        if (!$partenaire->latitude || !$partenaire->longitude || !$repere->latitude || !$repere->longitude) {
+            return 0;
+        }
+
+        $distanceKm = self::calculerDistanceRoutiere(
+            $partenaire->latitude, $partenaire->longitude,
+            $repere->latitude, $repere->longitude
+        );
+
+        $frais = $distanceKm * 1000;
+        return round(min($frais, 3500));
+    }
+
+    /**
      * Trouve le livreur disponible le plus proche qui n'a pas encore refusé cette commande,
      * et crée une PropositionLivraison.
      */
@@ -69,8 +107,13 @@ class LivraisonService
         }
 
         if ($partenaire->propre_service_livraison) {
-            \Illuminate\Support\Facades\Log::info("LivraisonService: Le partenaire a son propre service de livraison. Aucun livreur externe assigné pour la commande #{$commande->id}.");
-            return false;
+            \Illuminate\Support\Facades\Log::info("LivraisonService: Le partenaire a son propre service de livraison. Auto-assignation pour la commande #{$commande->id}.");
+            \App\Models\Livraison::create([
+                'commande_id' => $commande->id,
+                'livreur_id' => $partenaire->id,
+                'statut_livraison' => 'en_attente'
+            ]);
+            return true;
         }
 
         // On récupère les IDs des livreurs qui ont déjà refusé cette commande
@@ -98,7 +141,7 @@ class LivraisonService
         $distanceMin = PHP_FLOAT_MAX;
 
         foreach ($livreursDisponibles as $livreur) {
-            $distance = self::calculerDistance(
+            $distance = self::calculerDistanceRoutiere(
                 $partenaire->latitude,
                 $partenaire->longitude,
                 $livreur->latitude,
@@ -118,7 +161,22 @@ class LivraisonService
                 'statut' => 'en_attente'
             ]);
             
+            // Ajouter les infos de distance, adresses et frais dans l'événement
+            $proposition->distance_km = round($distanceMin, 2);
+            $proposition->frais_livraison = $commande->frais_livraison;
+            
+            $commande->load('repere');
+            $proposition->adresse_depart = $partenaire->adresse ?? 'Adresse boutique non définie';
+            $proposition->adresse_arrivee = $commande->repere->adresse ?? 'Adresse client non définie';
+            $proposition->lat_depart = $partenaire->latitude;
+            $proposition->lon_depart = $partenaire->longitude;
+            $proposition->lat_arrivee = $commande->repere->latitude;
+            $proposition->lon_arrivee = $commande->repere->longitude;
+            
             event(new \App\Events\NouvellePropositionLivraison($proposition));
+            
+            // Dispatch du job pour expirer la proposition après 1 minute
+            \App\Jobs\ExpirePropositionJob::dispatch($proposition->id)->delay(now()->addMinute());
             
             return true;
         }

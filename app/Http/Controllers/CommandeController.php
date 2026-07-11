@@ -74,7 +74,8 @@ class CommandeController extends Controller
             $montant_total += 15000 * $validated['quantite'];
         }
 
-        $fraisLivraison = $validated['frais_livraison'] ?? 0;
+        $repere = \App\Models\Repere::findOrFail($validated['repere_id']);
+        $fraisLivraison = \App\Services\LivraisonService::calculerFraisLivraison($produit->partenaire, $repere);
 
         $commande = Commande::create([
             'client_id' => $request->user()->id,
@@ -133,7 +134,8 @@ class CommandeController extends Controller
 
         $montant_total = $produit->prix * $validated['quantite'];
 
-        $fraisLivraison = $validated['frais_livraison'] ?? 0;
+        $repere = \App\Models\Repere::findOrFail($validated['repere_id']);
+        $fraisLivraison = \App\Services\LivraisonService::calculerFraisLivraison($produit->partenaire, $repere);
 
         $commande = Commande::create([
             'client_id' => $request->user()->id,
@@ -226,13 +228,16 @@ class CommandeController extends Controller
         }
 
         $jours = $dateDebut->diffInDays($dateFin) + 1;
+        $repere = \App\Models\Repere::findOrFail($validated['repere_id']);
+        $fraisLivraison = \App\Services\LivraisonService::calculerFraisLivraison($produit->partenaire, $repere);
 
-        $montant_total = $produit->prix * $validated['quantite'] * $jours;
+        $montant_total = ($produit->prix * $validated['quantite'] * $jours) + $fraisLivraison;
 
         $commande = Commande::create([
             'client_id' => $request->user()->id,
             'repere_id' => $validated['repere_id'],
             'montant_total' => $montant_total,
+            'frais_livraison' => $fraisLivraison,
             'creneau' => $validated['creneau'],
             'mode_paiement' => $validated['mode_paiement'],
             'type_commande' => 'materiel',
