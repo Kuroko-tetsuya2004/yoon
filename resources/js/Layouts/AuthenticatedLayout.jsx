@@ -252,13 +252,9 @@ export default function AuthenticatedLayout({ header, children }) {
                     {/* Page Mobile Header Fallback */}
                     {header && <div className="font-semibold text-xl text-slate-800 mb-6 sm:hidden">{header}</div>}
 
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                    >
+                    <div className="animate-fade-in-up">
                         {children}
-                    </motion.div>
+                    </div>
                 </main>
             </div>
         </div>
