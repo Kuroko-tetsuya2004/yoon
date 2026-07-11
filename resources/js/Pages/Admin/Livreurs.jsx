@@ -54,9 +54,16 @@ export default function Livreurs({ auth, livreurs }) {
                                         </td>
                                         <td>
                                             {livreur.moyen_transport ? (
-                                                <span className="badge badge-blue">
-                                                    {livreur.moyen_transport === 'Moto' ? '🏍️' : livreur.moyen_transport === 'Vélo' ? '🚲' : livreur.moyen_transport === 'Camionnette' ? '🚚' : '🚗'} {livreur.moyen_transport}
-                                                </span>
+                                                <div>
+                                                    <span className="badge badge-blue">
+                                                        {livreur.moyen_transport === 'Moto' ? '🏍️' : livreur.moyen_transport === 'Vélo' ? '🚲' : livreur.moyen_transport === 'camionnette' ? '🚚' : '🚗'} {livreur.moyen_transport}
+                                                    </span>
+                                                    {livreur.immatriculation && (
+                                                        <div className="text-xs font-mono text-slate-600 bg-slate-100 px-2 py-1 rounded inline-block mt-1 border border-slate-200">
+                                                            {livreur.immatriculation}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             ) : (
                                                 <span className="badge badge-gray">Non renseigné</span>
                                             )}

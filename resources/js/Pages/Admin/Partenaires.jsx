@@ -58,9 +58,19 @@ export default function Partenaires({ auth, partenaires }) {
                                             <div className="text-xs text-slate-500 mt-0.5">{partenaire.email}</div>
                                         </td>
                                         <td className="max-w-xs">
-                                            <div className="text-slate-600 truncate" title={partenaire.description_boutique || ''}>
+                                            <div className="text-slate-600 truncate font-medium" title={partenaire.description_boutique || ''}>
                                                 {limitString(partenaire.description_boutique, 40)}
                                             </div>
+                                            {partenaire.adresse && (
+                                                <div className="text-xs text-slate-500 mt-1 truncate" title={partenaire.adresse}>
+                                                    📍 {partenaire.adresse}
+                                                </div>
+                                            )}
+                                            {partenaire.propre_service_livraison && (
+                                                <div className="text-xs text-indigo-600 mt-1 font-medium bg-indigo-50 inline-block px-1 rounded">
+                                                    🚚 Propre service livraison
+                                                </div>
+                                            )}
                                         </td>
                                         <td>
                                             {partenaire.statut_validation === 'valide' ? (
