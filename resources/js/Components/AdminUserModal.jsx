@@ -1,11 +1,19 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MapPin, Phone, Mail, Calendar, Bike, Package, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { useEffect, useState } from 'react';
 
 export default function AdminUserModal({ user, isOpen, onClose }) {
     if (!user) return null;
 
     const isLivreur = user.role === 'livreur';
     const isPartenaire = user.role === 'partenaire';
+
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
 
     const getStatusBadge = (status) => {
         switch(status) {
@@ -16,7 +24,9 @@ export default function AdminUserModal({ user, isOpen, onClose }) {
         }
     };
 
-    return (
+    if (!mounted) return null;
+
+    return createPortal(
         <AnimatePresence>
             {isOpen && (
                 <>
@@ -173,6 +183,7 @@ export default function AdminUserModal({ user, isOpen, onClose }) {
                     </motion.div>
                 </>
             )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
 }
