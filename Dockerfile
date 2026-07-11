@@ -29,9 +29,7 @@ COPY . .
 ENV COMPOSER_ALLOW_SUPERUSER=1
 RUN composer install --no-dev --optimize-autoloader --no-scripts --ignore-platform-reqs
 
-# Installer les dépendances JS et compiler
-RUN npm install
-RUN npm run build
+# Les dépendances JS et le dossier public/build sont déjà inclus dans le dépôt.
 
 # Configurer Apache pour pointer vers le dossier public de Laravel
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public

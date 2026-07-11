@@ -30,12 +30,20 @@ services:
         fromDatabase:
           name: yoon-db
           property: connectionString
+      - key: APP_KEY
+        value: "base64:bazi4To+VqmbaIj905PSYnID1ZruDP/+kxv7dDZCFhY="
       - key: REVERB_APP_ID
-        value: "yoon_app_id"
+        value: "452299"
       - key: REVERB_APP_KEY
-        value: "yoon_app_key"
+        value: "4qkyonks9nnrsiz6qnck"
       - key: REVERB_APP_SECRET
-        value: "yoon_app_secret"
+        value: "gdedjqiwhtskzgiuuovs"
+      - key: VITE_REVERB_APP_KEY
+        value: "4qkyonks9nnrsiz6qnck"
+      - key: VITE_REVERB_PORT
+        value: "443"
+      - key: VITE_REVERB_SCHEME
+        value: "https"
       - key: REDIS_URL
         fromService:
           type: redis
@@ -63,11 +71,11 @@ services:
           name: yoon-db
           property: connectionString
       - key: REVERB_APP_ID
-        value: "yoon_app_id"
+        value: "452299"
       - key: REVERB_APP_KEY
-        value: "yoon_app_key"
+        value: "4qkyonks9nnrsiz6qnck"
       - key: REVERB_APP_SECRET
-        value: "yoon_app_secret"
+        value: "gdedjqiwhtskzgiuuovs"
       - key: REDIS_URL
         fromService:
           type: redis
