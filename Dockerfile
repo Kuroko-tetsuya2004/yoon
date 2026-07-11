@@ -43,8 +43,8 @@ RUN sed -i 's/<VirtualHost \*:80>/<VirtualHost \*:${PORT}>/g' /etc/apache2/sites
 # Donner les bonnes permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Créer un script de démarrage qui lance les scripts Composer et les migrations avant Apache
-RUN echo '#!/bin/bash\nphp artisan package:discover --ansi\nphp artisan migrate --force\nphp artisan storage:link\napache2-foreground' > /usr/local/bin/start.sh
+# Créer un script de démarrage qui prépare l'application avant Apache
+RUN echo '#!/bin/bash\nphp artisan optimize:clear\nphp artisan package:discover --ansi\nphp artisan migrate --force\nphp artisan storage:link\nchown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache\nchmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache\napache2-foreground' > /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
 
 CMD ["/usr/local/bin/start.sh"]
