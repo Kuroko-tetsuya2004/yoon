@@ -165,6 +165,9 @@ class CommandeController extends Controller
             }
         }
 
+        return back()->with('error', 'Impossible de confirmer la récupération.');
+    }
+
     public function updateLivraisonStatut(Request $request, Commande $commande)
     {
         if ($request->user()->role !== 'partenaire') abort(403);
