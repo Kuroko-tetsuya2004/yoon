@@ -60,7 +60,7 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 RUN echo '#!/bin/bash' > /usr/local/bin/start.sh && \
     echo 'sed -i "s/\${PORT}/$PORT/g" /etc/apache2/ports.conf' >> /usr/local/bin/start.sh && \
     echo 'sed -i "s/\${PORT}/$PORT/g" /etc/apache2/sites-available/000-default.conf' >> /usr/local/bin/start.sh && \
-    echo 'php artisan optimize:clear' >> /usr/local/bin/start.sh && \
+    echo 'php artisan optimize' >> /usr/local/bin/start.sh && \
     echo 'php artisan package:discover --ansi' >> /usr/local/bin/start.sh && \
     echo 'php artisan migrate --force' >> /usr/local/bin/start.sh && \
     echo 'php artisan storage:link' >> /usr/local/bin/start.sh && \

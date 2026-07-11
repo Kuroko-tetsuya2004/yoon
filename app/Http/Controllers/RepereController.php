@@ -65,7 +65,7 @@ class RepereController extends Controller
             $path = parse_url($repere->photo, PHP_URL_PATH);
             // Suppression du premier slash si présent, puis du nom du bucket si c'est path-style
             // Ex: /yoon/reperes/image.jpg => reperes/image.jpg
-            $path = str_replace('/' . env('AWS_BUCKET') . '/', '', $path);
+            $path = str_replace('/' . config('filesystems.disks.s3.bucket') . '/', '', $path);
             Storage::disk('s3')->delete($path);
         }
 
