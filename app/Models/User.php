@@ -19,7 +19,7 @@ class User extends Authenticatable
         'rappel_actif', 'frequence_rappel_jours', 'prochain_rappel_date', 
         'description_boutique', 'photo_devanture', 'moyen_transport', 
         'latitude', 'longitude', 'adresse', 'propre_service_livraison', 
-        'photo_moyen_transport'
+        'photo_moyen_transport', 'immatriculation'
     ];
 
     protected $hidden = [

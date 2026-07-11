@@ -11,6 +11,7 @@ export default function Register() {
         password: '',
         password_confirmation: '',
         moyen_transport: '',
+        immatriculation: '',
         description_boutique: '',
         adresse: '',
         propre_service_livraison: false,
@@ -163,12 +164,25 @@ export default function Register() {
                                 required
                             >
                                 <option value="">Sélectionnez un moyen de transport</option>
-                                <option value="Moto">Moto</option>
-                                <option value="Vélo">Vélo</option>
-                                <option value="Voiture">Voiture</option>
-                                <option value="Camionnette">Camionnette</option>
+                                <option value="camionnette">Camionnette</option>
+                                <option value="tricycles">Tricycles</option>
+                                <option value="voiture de transport de bagages">Voiture de transport de bagages</option>
                             </select>
                             {errors.moyen_transport && <div className="text-red-600 mt-2 text-sm">{errors.moyen_transport}</div>}
+                        </div>
+                        <div>
+                            <label htmlFor="immatriculation" className="block font-medium text-sm text-gray-700">Numéro d'immatriculation</label>
+                            <input
+                                id="immatriculation"
+                                type="text"
+                                name="immatriculation"
+                                value={data.immatriculation}
+                                className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                                onChange={(e) => setData('immatriculation', e.target.value.toUpperCase())}
+                                placeholder="Ex: DK-1234-AB"
+                                required
+                            />
+                            {errors.immatriculation && <div className="text-red-600 mt-2 text-sm">{errors.immatriculation}</div>}
                         </div>
                         <div>
                             <label htmlFor="photo_moyen_transport" className="block font-medium text-sm text-gray-700">Photo du moyen de transport</label>
