@@ -48,9 +48,9 @@ export default function AdminUserModal({ user, isOpen, onClose }) {
                             <div className="flex flex-col sm:flex-row gap-6 mb-8">
                                 {/* Photo */}
                                 <div className="shrink-0">
-                                    {(user.photo_devanture || user.photo_moyen_transport) ? (
+                                    {(user.photo_devanture_url || user.photo_moyen_transport_url) ? (
                                         <img 
-                                            src={`/storage/${user.photo_devanture || user.photo_moyen_transport}`} 
+                                            src={user.photo_devanture_url || user.photo_moyen_transport_url} 
                                             alt="Photo" 
                                             className="w-32 h-32 rounded-xl object-cover border-4 border-white shadow-md bg-slate-100"
                                         />

@@ -138,9 +138,9 @@ export default function Dashboard({ stats, ventesGraphique, dernieresCommandes, 
                                     {comptesEnAttente.map((compte) => (
                                         <li key={compte.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between hover:bg-slate-50 gap-4">
                                             <div className="flex gap-4">
-                                                {(compte.photo_devanture || compte.photo_moyen_transport) && (
+                                                {(compte.photo_devanture_url || compte.photo_moyen_transport_url) && (
                                                     <img 
-                                                        src={compte.photo_devanture ? `/storage/${compte.photo_devanture}` : `/storage/${compte.photo_moyen_transport}`} 
+                                                        src={compte.photo_devanture_url || compte.photo_moyen_transport_url} 
                                                         alt="Photo" 
                                                         className="w-16 h-16 rounded object-cover border"
                                                     />
@@ -202,8 +202,8 @@ export default function Dashboard({ stats, ventesGraphique, dernieresCommandes, 
                                     {partenaires.map((p) => (
                                         <li key={p.id} className="p-4 flex items-start justify-between hover:bg-slate-50 gap-4">
                                             <div className="flex gap-4">
-                                                {p.photo_devanture ? (
-                                                    <img src={`/storage/${p.photo_devanture}`} alt="Devanture" className="w-12 h-12 rounded object-cover border" />
+                                                {p.photo_devanture_url ? (
+                                                    <img src={p.photo_devanture_url} alt="Devanture" className="w-12 h-12 rounded object-cover border" />
                                                 ) : (
                                                     <div className="w-12 h-12 rounded bg-slate-100 flex items-center justify-center text-slate-400 border">🏪</div>
                                                 )}
@@ -250,8 +250,8 @@ export default function Dashboard({ stats, ventesGraphique, dernieresCommandes, 
                                     {livreurs.map((l) => (
                                         <li key={l.id} className="p-4 flex items-start justify-between hover:bg-slate-50 gap-4">
                                             <div className="flex gap-4">
-                                                {l.photo_moyen_transport ? (
-                                                    <img src={`/storage/${l.photo_moyen_transport}`} alt="Transport" className="w-12 h-12 rounded object-cover border" />
+                                                {l.photo_moyen_transport_url ? (
+                                                    <img src={l.photo_moyen_transport_url} alt="Transport" className="w-12 h-12 rounded object-cover border" />
                                                 ) : (
                                                     <div className="w-12 h-12 rounded bg-slate-100 flex items-center justify-center text-slate-400 border">🛵</div>
                                                 )}

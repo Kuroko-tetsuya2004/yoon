@@ -30,11 +30,16 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    protected $appends = ['photo_devanture_url'];
+    protected $appends = ['photo_devanture_url', 'photo_moyen_transport_url'];
 
     public function getPhotoDevantureUrlAttribute()
     {
         return $this->photo_devanture ? \Illuminate\Support\Facades\Storage::disk('s3')->url($this->photo_devanture) : null;
+    }
+
+    public function getPhotoMoyenTransportUrlAttribute()
+    {
+        return $this->photo_moyen_transport ? \Illuminate\Support\Facades\Storage::disk('s3')->url($this->photo_moyen_transport) : null;
     }
 
     /**
