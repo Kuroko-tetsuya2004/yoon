@@ -54,19 +54,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/commandes/pondereux', [\App\Http\Controllers\CommandeController::class, 'storePondereux'])->name('commandes.pondereux.store');
     Route::get('/commandes/materiel/create', [\App\Http\Controllers\CommandeController::class, 'createMateriel'])->name('commandes.materiel.create');
     Route::post('/commandes/materiel', [\App\Http\Controllers\CommandeController::class, 'storeMateriel'])->name('commandes.materiel.store');
-    Route::get('/commandes/{commande}', [\App\Http\Controllers\CommandeController::class, 'show'])->name('commandes.show');
-    Route::get('/commandes/{commande}/livreur-location', [\App\Http\Controllers\CommandeController::class, 'getLivreurLocation'])->name('commandes.livreur_location');
-    Route::post('/commandes/{commande}/confirmer-reception', [\App\Http\Controllers\CommandeController::class, 'confirmerReception'])->name('commandes.confirmer_reception');
+    Route::get('/commandes/{commande}', [\App\Http\Controllers\CommandeController::class, 'show'])->where('commande', '[0-9]+')->name('commandes.show');
+    Route::get('/commandes/{commande}/livreur-location', [\App\Http\Controllers\CommandeController::class, 'getLivreurLocation'])->where('commande', '[0-9]+')->name('commandes.livreur_location');
+    Route::post('/commandes/{commande}/confirmer-reception', [\App\Http\Controllers\CommandeController::class, 'confirmerReception'])->where('commande', '[0-9]+')->name('commandes.confirmer_reception');
 
     // Routes Partenaires
     Route::prefix('partenaire')->name('partenaire.')->group(function () {
         Route::redirect('/', '/partenaire/dashboard');
         Route::get('/dashboard', [\App\Http\Controllers\Partenaire\ProduitController::class, 'index'])->name('dashboard');
         Route::get('/commandes', [\App\Http\Controllers\Partenaire\CommandeController::class, 'index'])->name('commandes.index');
-        Route::patch('/commandes/{commande}/valider', [\App\Http\Controllers\Partenaire\CommandeController::class, 'valider'])->name('commandes.valider');
-        Route::patch('/commandes/{commande}/refuser', [\App\Http\Controllers\Partenaire\CommandeController::class, 'refuser'])->name('commandes.refuser');
-        Route::post('/commandes/{commande}/confirmer-retour', [\App\Http\Controllers\Partenaire\CommandeController::class, 'confirmerRetour'])->name('commandes.confirmer_retour');
-        Route::post('/commandes/{commande}/confirmer-recuperation', [\App\Http\Controllers\Partenaire\CommandeController::class, 'confirmerRecuperation'])->name('commandes.confirmer_recuperation');
+        Route::patch('/commandes/{commande}/valider', [\App\Http\Controllers\Partenaire\CommandeController::class, 'valider'])->where('commande', '[0-9]+')->name('commandes.valider');
+        Route::patch('/commandes/{commande}/refuser', [\App\Http\Controllers\Partenaire\CommandeController::class, 'refuser'])->where('commande', '[0-9]+')->name('commandes.refuser');
+        Route::post('/commandes/{commande}/confirmer-retour', [\App\Http\Controllers\Partenaire\CommandeController::class, 'confirmerRetour'])->where('commande', '[0-9]+')->name('commandes.confirmer_retour');
+        Route::post('/commandes/{commande}/confirmer-recuperation', [\App\Http\Controllers\Partenaire\CommandeController::class, 'confirmerRecuperation'])->where('commande', '[0-9]+')->name('commandes.confirmer_recuperation');
         Route::resource('produits', \App\Http\Controllers\Partenaire\ProduitController::class);
         Route::post('produits/{produit}/restock', [\App\Http\Controllers\Partenaire\ProduitController::class, 'restock'])->name('produits.restock');
         Route::patch('produits/{produit}/toggle-status', [\App\Http\Controllers\Partenaire\ProduitController::class, 'toggleDisponibilite'])->name('produits.toggle-status');
@@ -98,7 +98,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Route Litiges Client/Partenaire
-    Route::post('/commandes/{commande}/litige', [\App\Http\Controllers\LitigeController::class, 'store'])->name('litiges.store');
+    Route::post('/commandes/{commande}/litige', [\App\Http\Controllers\LitigeController::class, 'store'])->where('commande', '[0-9]+')->name('litiges.store');
 
 });
 
