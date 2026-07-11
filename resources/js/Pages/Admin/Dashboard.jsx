@@ -200,11 +200,22 @@ export default function Dashboard({ stats, ventesGraphique, dernieresCommandes, 
                             ) : (
                                 <ul className="divide-y divide-slate-200">
                                     {partenaires.map((p) => (
-                                        <li key={p.id} className="p-4 flex items-center justify-between hover:bg-slate-50">
-                                            <div>
-                                                <div className="font-medium text-slate-800">{p.name}</div>
-                                                <div className="text-sm text-slate-500">{p.email} &bull; <span className={`font-medium ${p.statut_validation === 'valide' ? 'text-emerald-600' : 'text-red-600'}`}>{p.statut_validation}</span></div>
-                                                {p.adresse && <div className="text-xs text-slate-500 mt-0.5 truncate max-w-xs">📍 {p.adresse}</div>}
+                                        <li key={p.id} className="p-4 flex items-start justify-between hover:bg-slate-50 gap-4">
+                                            <div className="flex gap-4">
+                                                {p.photo_devanture ? (
+                                                    <img src={`/storage/${p.photo_devanture}`} alt="Devanture" className="w-12 h-12 rounded object-cover border" />
+                                                ) : (
+                                                    <div className="w-12 h-12 rounded bg-slate-100 flex items-center justify-center text-slate-400 border">🏪</div>
+                                                )}
+                                                <div>
+                                                    <div className="font-medium text-slate-800">{p.name}</div>
+                                                    <div className="text-sm text-slate-500">{p.email} &bull; {p.telephone} &bull; <span className={`font-medium ${p.statut_validation === 'valide' ? 'text-emerald-600' : 'text-red-600'}`}>{p.statut_validation}</span></div>
+                                                    {p.adresse && <div className="text-xs text-slate-500 mt-0.5 truncate max-w-xs">📍 {p.adresse}</div>}
+                                                    <div className="text-xs text-slate-600 mt-1 flex gap-2">
+                                                        <span className="bg-slate-100 px-1.5 py-0.5 rounded">📦 {p.produits_count} produit(s)</span>
+                                                        {p.propre_service_livraison && <span className="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded">🚚 Propre livraison</span>}
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div>
                                                 <Link
@@ -237,15 +248,24 @@ export default function Dashboard({ stats, ventesGraphique, dernieresCommandes, 
                             ) : (
                                 <ul className="divide-y divide-slate-200">
                                     {livreurs.map((l) => (
-                                        <li key={l.id} className="p-4 flex items-center justify-between hover:bg-slate-50">
-                                            <div>
-                                                <div className="font-medium text-slate-800">{l.name}</div>
-                                                <div className="text-sm text-slate-500">{l.email} &bull; <span className={`font-medium ${l.statut_validation === 'valide' ? 'text-emerald-600' : 'text-red-600'}`}>{l.statut_validation}</span></div>
-                                                {l.moyen_transport && (
-                                                    <div className="text-xs text-slate-500 mt-0.5">
-                                                        {l.moyen_transport} {l.immatriculation && <span className="font-mono text-slate-700 bg-slate-100 px-1 rounded ml-1 border border-slate-200">{l.immatriculation}</span>}
-                                                    </div>
+                                        <li key={l.id} className="p-4 flex items-start justify-between hover:bg-slate-50 gap-4">
+                                            <div className="flex gap-4">
+                                                {l.photo_moyen_transport ? (
+                                                    <img src={`/storage/${l.photo_moyen_transport}`} alt="Transport" className="w-12 h-12 rounded object-cover border" />
+                                                ) : (
+                                                    <div className="w-12 h-12 rounded bg-slate-100 flex items-center justify-center text-slate-400 border">🛵</div>
                                                 )}
+                                                <div>
+                                                    <div className="font-medium text-slate-800">{l.name}</div>
+                                                    <div className="text-sm text-slate-500">{l.email} &bull; {l.telephone} &bull; <span className={`font-medium ${l.statut_validation === 'valide' ? 'text-emerald-600' : 'text-red-600'}`}>{l.statut_validation}</span></div>
+                                                    {l.moyen_transport && (
+                                                        <div className="text-xs text-slate-500 mt-0.5 flex gap-2 items-center">
+                                                            <span>{l.moyen_transport === 'Moto' ? '🏍️' : l.moyen_transport === 'Vélo' ? '🚲' : l.moyen_transport === 'camionnette' ? '🚚' : '🚗'} {l.moyen_transport}</span>
+                                                            {l.immatriculation && <span className="font-mono text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">{l.immatriculation}</span>}
+                                                            <span className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-medium">📦 {l.livraisons_count} course(s)</span>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                             <div>
                                                 <Link

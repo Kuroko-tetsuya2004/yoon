@@ -61,8 +61,8 @@ class AdminController extends Controller
             });
 
         $comptesEnAttente = User::whereIn('role', ['partenaire', 'livreur'])->where('statut_validation', 'en_attente')->orderBy('created_at', 'desc')->get();
-        $partenaires = User::where('role', 'partenaire')->where('statut_validation', '!=', 'en_attente')->orderBy('created_at', 'desc')->get();
-        $livreurs = User::where('role', 'livreur')->where('statut_validation', '!=', 'en_attente')->orderBy('created_at', 'desc')->get();
+        $partenaires = User::where('role', 'partenaire')->withCount('produits')->where('statut_validation', '!=', 'en_attente')->orderBy('created_at', 'desc')->get();
+        $livreurs = User::where('role', 'livreur')->withCount('livraisons')->where('statut_validation', '!=', 'en_attente')->orderBy('created_at', 'desc')->get();
 
         return inertia('Admin/Dashboard', [
             'stats' => $stats,
@@ -78,7 +78,7 @@ class AdminController extends Controller
     {
         if ($request->user()->role !== 'administrateur') abort(403);
 
-        $partenaires = User::where('role', 'partenaire')->orderBy('created_at', 'desc')->get();
+        $partenaires = User::where('role', 'partenaire')->withCount('produits')->orderBy('created_at', 'desc')->get();
         return inertia('Admin/Partenaires', ['partenaires' => $partenaires]);
     }
 
@@ -103,11 +103,39 @@ class AdminController extends Controller
         return back()->with('success', $message);
     }
 
+    public function commandes(Request $request)
+    {
+        if ($request->user()->role !== 'administrateur') abort(403);
+
+        $commandes = Commande::with(['client', 'livraison.livreur', 'gaz.partenaire', 'pondereux.partenaire', 'materiel.partenaire'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($commande) {
+                $partenaire = null;
+                if ($commande->type_commande === 'gaz' && $commande->gaz) $partenaire = $commande->gaz->partenaire;
+                elseif ($commande->type_commande === 'pondereux' && $commande->pondereux) $partenaire = $commande->pondereux->partenaire;
+                elseif ($commande->type_commande === 'materiel' && $commande->materiel) $partenaire = $commande->materiel->partenaire;
+
+                return [
+                    'id' => $commande->id,
+                    'date' => $commande->created_at->format('d/m/Y H:i'),
+                    'client' => $commande->client ? $commande->client->name : 'Inconnu',
+                    'montant' => $commande->montant_total,
+                    'statut' => $commande->statut,
+                    'partenaire' => $partenaire ? $partenaire->name : 'N/A',
+                    'livreur' => ($commande->livraison && $commande->livraison->livreur) ? $commande->livraison->livreur->name : 'Non assigné',
+                    'type' => ucfirst($commande->type_commande)
+                ];
+            });
+
+        return inertia('Admin/Commandes', ['commandes' => $commandes]);
+    }
+
     public function livreurs(Request $request)
     {
         if ($request->user()->role !== 'administrateur') abort(403);
 
-        $livreurs = User::where('role', 'livreur')->orderBy('created_at', 'desc')->get();
+        $livreurs = User::where('role', 'livreur')->withCount('livraisons')->orderBy('created_at', 'desc')->get();
         return inertia('Admin/Livreurs', ['livreurs' => $livreurs]);
     }
 

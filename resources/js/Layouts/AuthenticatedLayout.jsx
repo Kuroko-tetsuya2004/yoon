@@ -38,6 +38,7 @@ export default function AuthenticatedLayout({ header, children }) {
         } else if (auth.user.role === 'administrateur') {
             links.push(
                 { name: 'Tableau de bord', href: route('admin.dashboard'), active: route().current('admin.dashboard'), icon: '📊' },
+                { name: 'Commandes', href: route('admin.commandes'), active: route().current('admin.commandes'), icon: '📦' },
                 { name: 'Partenaires', href: route('admin.partenaires'), active: route().current('admin.partenaires'), icon: '🤝', badge: admin_badges?.partenaires > 0 ? admin_badges.partenaires : null },
                 { name: 'Livreurs', href: route('admin.livreurs'), active: route().current('admin.livreurs'), icon: '🏍️', badge: admin_badges?.livreurs > 0 ? admin_badges.livreurs : null },
                 { name: 'Litiges', href: route('admin.litiges'), active: route().current('admin.litiges'), icon: '⚠️' }

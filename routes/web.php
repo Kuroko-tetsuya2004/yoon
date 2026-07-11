@@ -89,6 +89,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('/partenaires/{user}/valider', [\App\Http\Controllers\AdminController::class, 'validerPartenaire'])->name('partenaires.valider');
         Route::patch('/partenaires/{user}/suspendre', [\App\Http\Controllers\AdminController::class, 'suspendrePartenaire'])->name('partenaires.suspendre');
 
+        Route::get('/commandes', [\App\Http\Controllers\AdminController::class, 'commandes'])->name('commandes');
+
         Route::get('/livreurs', [\App\Http\Controllers\AdminController::class, 'livreurs'])->name('livreurs');
         Route::patch('/livreurs/{user}/valider', [\App\Http\Controllers\AdminController::class, 'validerLivreur'])->name('livreurs.valider');
         Route::patch('/livreurs/{user}/suspendre', [\App\Http\Controllers\AdminController::class, 'suspendreLivreur'])->name('livreurs.suspendre');
