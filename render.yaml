@@ -15,6 +15,7 @@ services:
     name: yoon-web
     env: docker
     plan: free
+    dockerCommand: "/usr/local/bin/start.sh"
     envVars:
       - key: APP_NAME
         value: Yoon
