@@ -31,8 +31,17 @@ COPY . .
 ENV COMPOSER_ALLOW_SUPERUSER=1
 RUN composer install --no-dev --optimize-autoloader --no-scripts --ignore-platform-reqs
 
-# Installer les dépendances JS (sans les compiler encore car les variables d'environnement manquent)
+# Installer les dépendances JS
 RUN npm install
+
+# Exposer les variables d'environnement VITE pour la compilation
+ENV VITE_REVERB_APP_KEY="4qkyonks9nnrsiz6qnck"
+ENV VITE_REVERB_HOST="yoon-reverb.onrender.com"
+ENV VITE_REVERB_PORT="443"
+ENV VITE_REVERB_SCHEME="https"
+
+# Compiler le JS au moment du build
+RUN npm run build
 
 # Configurer Apache pour pointer vers le dossier public de Laravel
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
@@ -40,15 +49,24 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-av
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
 
-# Configurer Apache pour écouter sur le port dynamique fourni par Render ($PORT)
+# Configurer Apache pour utiliser une variable placeholder qui sera remplacée au démarrage
 RUN sed -i 's/Listen 80/Listen ${PORT}/g' /etc/apache2/ports.conf
 RUN sed -i 's/<VirtualHost \*:80>/<VirtualHost \*:${PORT}>/g' /etc/apache2/sites-available/000-default.conf
 
 # Donner les bonnes permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Créer un script de démarrage qui compile le JS et prépare l'application avant Apache
-RUN echo '#!/bin/bash\nnpm run build\nphp artisan optimize:clear\nphp artisan package:discover --ansi\nphp artisan migrate --force\nphp artisan storage:link\nchown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public/build\nchmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public/build\napache2-foreground' > /usr/local/bin/start.sh
+# Créer un script de démarrage qui remplace ${PORT} par sa vraie valeur puis démarre Apache
+RUN echo '#!/bin/bash' > /usr/local/bin/start.sh && \
+    echo 'sed -i "s/\${PORT}/$PORT/g" /etc/apache2/ports.conf' >> /usr/local/bin/start.sh && \
+    echo 'sed -i "s/\${PORT}/$PORT/g" /etc/apache2/sites-available/000-default.conf' >> /usr/local/bin/start.sh && \
+    echo 'php artisan optimize:clear' >> /usr/local/bin/start.sh && \
+    echo 'php artisan package:discover --ansi' >> /usr/local/bin/start.sh && \
+    echo 'php artisan migrate --force' >> /usr/local/bin/start.sh && \
+    echo 'php artisan storage:link' >> /usr/local/bin/start.sh && \
+    echo 'chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public/build' >> /usr/local/bin/start.sh && \
+    echo 'chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public/build' >> /usr/local/bin/start.sh && \
+    echo 'apache2-foreground' >> /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
 
 CMD ["/usr/local/bin/start.sh"]
