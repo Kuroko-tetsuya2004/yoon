@@ -57,6 +57,7 @@ RUN sed -i 's/<VirtualHost \*:80>/<VirtualHost \*:${PORT}>/g' /etc/apache2/sites
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Créer un script de démarrage qui remplace ${PORT} par sa vraie valeur puis démarre Apache
+ENV LOG_CHANNEL=stderr
 RUN echo '#!/bin/bash' > /usr/local/bin/start.sh && \
     echo 'sed -i "s/\${PORT}/$PORT/g" /etc/apache2/ports.conf' >> /usr/local/bin/start.sh && \
     echo 'sed -i "s/\${PORT}/$PORT/g" /etc/apache2/sites-available/000-default.conf' >> /usr/local/bin/start.sh && \
