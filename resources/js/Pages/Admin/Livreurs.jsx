@@ -1,9 +1,12 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
+import AdminUserModal from '@/Components/AdminUserModal';
 
 export default function Livreurs({ auth, livreurs }) {
     const { patch } = useForm();
+    const [selectedLivreur, setSelectedLivreur] = useState(null);
 
     const validerLivreur = (id) => {
         patch(route('admin.livreurs.valider', id));
@@ -43,6 +46,8 @@ export default function Livreurs({ auth, livreurs }) {
                                         key={livreur.id}
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
+                                        onClick={() => setSelectedLivreur(livreur)}
+                                        className="cursor-pointer hover:bg-slate-50 transition-colors"
                                     >
                                         <td>
                                             <div className="font-semibold text-slate-900">{livreur.name}</div>
@@ -80,12 +85,18 @@ export default function Livreurs({ auth, livreurs }) {
                                         <td>
                                             <div className="flex justify-end gap-2">
                                                 {livreur.statut_validation !== 'valide' && (
-                                                    <button onClick={() => validerLivreur(livreur.id)} className="btn-success btn-sm">
+                                                    <button 
+                                                        onClick={(e) => { e.stopPropagation(); validerLivreur(livreur.id); }} 
+                                                        className="btn-success btn-sm"
+                                                    >
                                                         Valider
                                                     </button>
                                                 )}
                                                 {livreur.statut_validation !== 'rejete' && (
-                                                    <button onClick={() => suspendreLivreur(livreur.id)} className="btn-danger btn-sm">
+                                                    <button 
+                                                        onClick={(e) => { e.stopPropagation(); suspendreLivreur(livreur.id); }} 
+                                                        className="btn-danger btn-sm"
+                                                    >
                                                         Suspendre
                                                     </button>
                                                 )}
@@ -104,6 +115,12 @@ export default function Livreurs({ auth, livreurs }) {
                     </table>
                 </div>
             </div>
+
+            <AdminUserModal 
+                user={selectedLivreur} 
+                isOpen={!!selectedLivreur} 
+                onClose={() => setSelectedLivreur(null)} 
+            />
         </AuthenticatedLayout>
     );
 }

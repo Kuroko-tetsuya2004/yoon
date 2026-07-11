@@ -1,9 +1,12 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
+import AdminUserModal from '@/Components/AdminUserModal';
 
 export default function Partenaires({ auth, partenaires }) {
     const { patch } = useForm();
+    const [selectedPartenaire, setSelectedPartenaire] = useState(null);
 
     const validerPartenaire = (id) => {
         patch(route('admin.partenaires.valider', id));
@@ -48,6 +51,8 @@ export default function Partenaires({ auth, partenaires }) {
                                         key={partenaire.id}
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
+                                        onClick={() => setSelectedPartenaire(partenaire)}
+                                        className="cursor-pointer hover:bg-slate-50 transition-colors"
                                     >
                                         <td>
                                             <div className="font-semibold text-slate-900">{partenaire.name}</div>
@@ -84,12 +89,18 @@ export default function Partenaires({ auth, partenaires }) {
                                         <td>
                                             <div className="flex justify-end gap-2">
                                                 {partenaire.statut_validation !== 'valide' && (
-                                                    <button onClick={() => validerPartenaire(partenaire.id)} className="btn-success btn-sm">
+                                                    <button 
+                                                        onClick={(e) => { e.stopPropagation(); validerPartenaire(partenaire.id); }} 
+                                                        className="btn-success btn-sm"
+                                                    >
                                                         Valider
                                                     </button>
                                                 )}
                                                 {partenaire.statut_validation !== 'rejete' && (
-                                                    <button onClick={() => suspendrePartenaire(partenaire.id)} className="btn-danger btn-sm">
+                                                    <button 
+                                                        onClick={(e) => { e.stopPropagation(); suspendrePartenaire(partenaire.id); }} 
+                                                        className="btn-danger btn-sm"
+                                                    >
                                                         Suspendre
                                                     </button>
                                                 )}
@@ -108,6 +119,12 @@ export default function Partenaires({ auth, partenaires }) {
                     </table>
                 </div>
             </div>
+
+            <AdminUserModal 
+                user={selectedPartenaire} 
+                isOpen={!!selectedPartenaire} 
+                onClose={() => setSelectedPartenaire(null)} 
+            />
         </AuthenticatedLayout>
     );
 }
