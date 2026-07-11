@@ -260,9 +260,9 @@ export default function Dashboard({ auth, livraisons, proposition, partenairePro
                                 </div>
                                 <div>
                                     <h4 className="font-semibold text-gray-700 text-sm uppercase">Livraison (Client)</h4>
-                                    <p className="font-bold mt-1">{proposition.commande.client.name}</p>
+                                    <p className="font-bold mt-1">{proposition.commande?.client?.name || 'Client Inconnu'}</p>
                                     <p className="text-sm text-gray-900 mt-1">📍 {proposition.adresse_arrivee}</p>
-                                    <p className="text-sm text-gray-600">{proposition.commande.repere?.nom} - {proposition.commande.repere?.description}</p>
+                                    <p className="text-sm text-gray-600">{proposition.commande?.repere?.nom} - {proposition.commande?.repere?.description}</p>
                                 </div>
                             </div>
 
@@ -317,15 +317,15 @@ export default function Dashboard({ auth, livraisons, proposition, partenairePro
                                         <div className="flex justify-between items-start">
                                             <div>
                                                 <p className="font-bold text-gray-900">Commande #{String(livraison.commande_id).padStart(5, '0')}</p>
-                                                <p className="text-sm text-gray-600 mt-1">Client : {livraison.commande.client.name}</p>
-                                                <p className="text-xs text-gray-900 mt-1 font-medium">📍 {livraison.commande.repere?.adresse || 'Adresse non spécifiée'}</p>
+                                                <p className="text-sm text-gray-600 mt-1">Client : {livraison.commande?.client?.name || 'Client Inconnu'}</p>
+                                                <p className="text-xs text-gray-900 mt-1 font-medium">📍 {livraison.commande?.repere?.adresse || 'Adresse non spécifiée'}</p>
                                                 
-                                                {livraison.commande.type_commande === 'gaz' && (
+                                                {livraison.commande?.type_commande === 'gaz' && (
                                                     <>
                                                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mt-2">
-                                                            Gaz - {livraison.commande.gaz?.quantite}x {livraison.commande.gaz?.type_bonbonne}
+                                                            Gaz - {livraison.commande?.gaz?.quantite}x {livraison.commande?.gaz?.type_bonbonne}
                                                         </span>
-                                                        {livraison.commande.gaz?.contenant_vide && (
+                                                        {livraison.commande?.gaz?.contenant_vide && (
                                                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800 mt-2 ml-2">
                                                                 ⚠️ Récupérer vide
                                                             </span>
