@@ -37,12 +37,13 @@ export default function AdminUserModal({ user, isOpen, onClose }) {
                         className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50"
                         onClick={onClose}
                     />
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-2xl shadow-xl z-50 overflow-hidden max-h-[90vh] flex flex-col"
-                    >
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 pointer-events-none">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col pointer-events-auto"
+                        >
                         {/* Header */}
                         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50">
                             <h3 className="text-xl font-bold text-slate-800 capitalize">
@@ -181,6 +182,7 @@ export default function AdminUserModal({ user, isOpen, onClose }) {
                         </div>
 
                     </motion.div>
+                    </div>
                 </>
             )}
         </AnimatePresence>,
