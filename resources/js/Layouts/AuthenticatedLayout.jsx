@@ -3,7 +3,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AuthenticatedLayout({ header, children }) {
-    const { auth, flash } = usePage().props;
+    const { auth, flash, admin_badges } = usePage().props;
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
 
@@ -38,8 +38,8 @@ export default function AuthenticatedLayout({ header, children }) {
         } else if (auth.user.role === 'administrateur') {
             links.push(
                 { name: 'Tableau de bord', href: route('admin.dashboard'), active: route().current('admin.dashboard'), icon: '📊' },
-                { name: 'Partenaires', href: route('admin.partenaires'), active: route().current('admin.partenaires'), icon: '🤝' },
-                { name: 'Livreurs', href: route('admin.livreurs'), active: route().current('admin.livreurs'), icon: '🏍️' },
+                { name: 'Partenaires', href: route('admin.partenaires'), active: route().current('admin.partenaires'), icon: '🤝', badge: admin_badges?.partenaires > 0 ? admin_badges.partenaires : null },
+                { name: 'Livreurs', href: route('admin.livreurs'), active: route().current('admin.livreurs'), icon: '🏍️', badge: admin_badges?.livreurs > 0 ? admin_badges.livreurs : null },
                 { name: 'Litiges', href: route('admin.litiges'), active: route().current('admin.litiges'), icon: '⚠️' }
             );
         }
@@ -75,14 +75,21 @@ export default function AuthenticatedLayout({ header, children }) {
                         <Link
                             key={link.name}
                             href={link.href}
-                            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                            className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                                 link.active
                                     ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
                                     : 'text-slate-400 hover:text-white hover:bg-slate-800'
                             }`}
                         >
-                            <span className="text-lg">{link.icon}</span>
-                            {link.name}
+                            <div className="flex items-center gap-3">
+                                <span className="text-lg">{link.icon}</span>
+                                {link.name}
+                            </div>
+                            {link.badge && (
+                                <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                    {link.badge}
+                                </span>
+                            )}
                         </Link>
                     ))}
                 </nav>
@@ -136,12 +143,19 @@ export default function AuthenticatedLayout({ header, children }) {
                                     key={link.name}
                                     href={link.href}
                                     onClick={() => setSidebarOpen(false)}
-                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium ${
+                                    className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm font-medium ${
                                         link.active ? 'bg-orange-500 text-white' : 'hover:bg-slate-800 hover:text-white'
                                     }`}
                                 >
-                                    <span className="text-lg">{link.icon}</span>
-                                    {link.name}
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-lg">{link.icon}</span>
+                                        {link.name}
+                                    </div>
+                                    {link.badge && (
+                                        <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                            {link.badge}
+                                        </span>
+                                    )}
                                 </Link>
                             ))}
                         </nav>

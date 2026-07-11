@@ -37,6 +37,14 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
 
+        $pendingPartenaires = 0;
+        $pendingLivreurs = 0;
+
+        if ($user && $user->role === 'administrateur') {
+            $pendingPartenaires = \App\Models\User::where('role', 'partenaire')->where('statut_validation', 'en_attente')->count();
+            $pendingLivreurs = \App\Models\User::where('role', 'livreur')->where('statut_validation', 'en_attente')->count();
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
@@ -57,6 +65,10 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error'   => $request->session()->get('error'),
+            ],
+            'admin_badges' => [
+                'partenaires' => $pendingPartenaires,
+                'livreurs' => $pendingLivreurs,
             ],
         ];
     }
