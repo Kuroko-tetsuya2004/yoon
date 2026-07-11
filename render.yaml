@@ -39,6 +39,12 @@ services:
         value: "4qkyonks9nnrsiz6qnck"
       - key: REVERB_APP_SECRET
         value: "gdedjqiwhtskzgiuuovs"
+      - key: REVERB_HOST
+        value: "yoon-reverb.onrender.com"
+      - key: REVERB_PORT
+        value: "443"
+      - key: REVERB_SCHEME
+        value: "https"
       - key: VITE_REVERB_APP_KEY
         value: "4qkyonks9nnrsiz6qnck"
       - key: VITE_REVERB_HOST
