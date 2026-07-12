@@ -38,6 +38,11 @@ class DashboardController extends Controller
                 $partenaire = \App\Models\User::find($commande->pondereux->partenaire_id);
             } elseif ($commande->type_commande === 'materiel' && $commande->materiel) {
                 $partenaire = \App\Models\User::find($commande->materiel->partenaire_id);
+            } elseif ($commande->type_commande === 'evenementielle' && $commande->evenementielle) {
+                $prestation = $commande->evenementielle->prestations()->first();
+                if ($prestation) {
+                    $partenaire = \App\Models\User::find($prestation->partenaire_id);
+                }
             }
             
             if ($partenaire && $commande->repere && $partenaire->latitude && $partenaire->longitude) {
@@ -66,6 +71,11 @@ class DashboardController extends Controller
                     $partenaire = \App\Models\User::find($commande->pondereux->partenaire_id);
                 } elseif ($commande->type_commande === 'materiel' && $commande->materiel) {
                     $partenaire = \App\Models\User::find($commande->materiel->partenaire_id);
+                } elseif ($commande->type_commande === 'evenementielle' && $commande->evenementielle) {
+                    $prestation = $commande->evenementielle->prestations()->first();
+                    if ($prestation) {
+                        $partenaire = \App\Models\User::find($prestation->partenaire_id);
+                    }
                 }
             }
             $livraison->partenaire = $partenaire;

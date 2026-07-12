@@ -99,6 +99,11 @@ class LivraisonService
             $partenaire = User::find($commande->pondereux->partenaire_id);
         } elseif ($commande->type_commande === 'materiel' && $commande->materiel) {
             $partenaire = User::find($commande->materiel->partenaire_id);
+        } elseif ($commande->type_commande === 'evenementielle' && $commande->evenementielle) {
+            $prestation = $commande->evenementielle->prestations()->first();
+            if ($prestation) {
+                $partenaire = User::find($prestation->partenaire_id);
+            }
         }
 
         if (!$partenaire || !$partenaire->latitude || !$partenaire->longitude) {
@@ -131,6 +136,15 @@ class LivraisonService
                                    ->whereNotIn('id', $livreursRefus)
                                    ->get();
 
+        // Fallback : si aucun livreur avec GPS n'est disponible, on prend tous les livreurs dispo sans filtre GPS
+        if ($livreursDisponibles->isEmpty()) {
+            $livreursDisponibles = User::where('role', 'livreur')
+                                       ->where('statut_validation', 'valide')
+                                       ->where('disponibilite', true)
+                                       ->whereNotIn('id', $livreursRefus)
+                                       ->get();
+        }
+
         if ($livreursDisponibles->isEmpty()) {
             \Illuminate\Support\Facades\Log::warning("LivraisonService: Aucun livreur disponible pour la commande #{$commande->id}.");
             return false; // Aucun livreur disponible
@@ -141,12 +155,16 @@ class LivraisonService
         $distanceMin = PHP_FLOAT_MAX;
 
         foreach ($livreursDisponibles as $livreur) {
-            $distance = self::calculerDistanceRoutiere(
-                $partenaire->latitude,
-                $partenaire->longitude,
-                $livreur->latitude,
-                $livreur->longitude
-            );
+            if ($partenaire->latitude && $partenaire->longitude && $livreur->latitude && $livreur->longitude) {
+                $distance = self::calculerDistanceRoutiere(
+                    $partenaire->latitude,
+                    $partenaire->longitude,
+                    $livreur->latitude,
+                    $livreur->longitude
+                );
+            } else {
+                $distance = 0; // Pas de coordonnées, distance par défaut pour permettre l'assignation
+            }
 
             if ($distance < $distanceMin) {
                 $distanceMin = $distance;

@@ -75,6 +75,7 @@ class CommandeController extends Controller
             $commande->evenementielle->prestations()->where('partenaire_id', $partenaireId)->update(['statut' => 'acceptee']);
             // Si toutes les prestations sont acceptées, on pourrait valider la commande complète, mais on simplifie ici.
             $commande->update(['statut' => 'acceptee']);
+            \App\Services\LivraisonService::assignerLivreurProche($commande);
         }
 
         // Notifier le client
