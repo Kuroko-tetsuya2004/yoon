@@ -14,7 +14,7 @@ class CommandeEvenementielle extends Model
 
     public function commande()
     {
-        return $this->morphOne(Commande::class, 'commandeable');
+        return $this->belongsTo(Commande::class);
     }
 
     public function prestations()

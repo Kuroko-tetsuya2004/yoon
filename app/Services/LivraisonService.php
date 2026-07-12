@@ -167,11 +167,17 @@ class LivraisonService
             
             $commande->load('repere');
             $proposition->adresse_depart = $partenaire->adresse ?? 'Adresse boutique non définie';
-            $proposition->adresse_arrivee = $commande->repere->adresse ?? 'Adresse client non définie';
+            if ($commande->repere) {
+                $proposition->adresse_arrivee = $commande->repere->adresse ?? 'Adresse client non définie';
+                $proposition->lat_arrivee = $commande->repere->latitude;
+                $proposition->lon_arrivee = $commande->repere->longitude;
+            } else {
+                $proposition->adresse_arrivee = 'Adresse client non définie';
+                $proposition->lat_arrivee = null;
+                $proposition->lon_arrivee = null;
+            }
             $proposition->lat_depart = $partenaire->latitude;
             $proposition->lon_depart = $partenaire->longitude;
-            $proposition->lat_arrivee = $commande->repere->latitude;
-            $proposition->lon_arrivee = $commande->repere->longitude;
             
             event(new \App\Events\NouvellePropositionLivraison($proposition));
             

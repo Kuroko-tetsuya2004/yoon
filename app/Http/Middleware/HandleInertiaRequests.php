@@ -59,7 +59,7 @@ class HandleInertiaRequests extends Middleware
                     'moyen_transport'   => $user->moyen_transport,
                     'photo_devanture'   => $user->photo_devanture,
                     'description_boutique' => $user->description_boutique,
-                    // latitude/longitude du livreur non exposées au client
+                    'propre_service_livraison' => $user->propre_service_livraison ?? false,
                 ] : null,
             ],
             'flash' => [

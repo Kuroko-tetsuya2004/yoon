@@ -60,7 +60,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/commandes/{commande}/confirmer-reception', [\App\Http\Controllers\CommandeController::class, 'confirmerReception'])->where('commande', '[0-9]+')->name('commandes.confirmer_reception');
 
     // Routes Partenaires
-    Route::prefix('partenaire')->name('partenaire.')->group(function () {
+    Route::middleware(['role:partenaire'])->prefix('partenaire')->name('partenaire.')->group(function () {
         Route::redirect('/', '/partenaire/dashboard');
         Route::get('/dashboard', [\App\Http\Controllers\Partenaire\DashboardController::class, 'index'])->name('dashboard');
         Route::get('/commandes', [\App\Http\Controllers\Partenaire\CommandeController::class, 'index'])->name('commandes.index');
@@ -80,7 +80,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Routes Livreur
-    Route::prefix('livreur')->name('livreur.')->group(function () {
+    Route::middleware(['role:livreur'])->prefix('livreur')->name('livreur.')->group(function () {
         Route::redirect('/', '/livreur/dashboard');
         Route::get('/dashboard', [\App\Http\Controllers\Livreur\DashboardController::class, 'index'])->name('dashboard');
         Route::patch('/propositions/{proposition}/accepter', [\App\Http\Controllers\Livreur\DashboardController::class, 'accepterProposition'])->name('propositions.accepter');

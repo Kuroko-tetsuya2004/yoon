@@ -12,14 +12,9 @@ export default function Dashboard({ auth, produits, hasReperes }) {
     ];
 
     const [activeCategory, setActiveCategory] = useState('all');
-    const [showAddressModal, setShowAddressModal] = useState(() => {
-        // Show modal if client has no reperes and hasn't dismissed it
-        if (auth.user.role !== 'client' || hasReperes) return false;
-        return localStorage.getItem(`dismissedAddress_${auth.user.id}`) !== 'true';
-    });
+    const [showAddressModal, setShowAddressModal] = useState(false);
 
-    const dismissAddressModal = () => {
-        localStorage.setItem(`dismissedAddress_${auth.user.id}`, 'true');
+    const closeAddressModal = () => {
         setShowAddressModal(false);
     };
 
@@ -133,16 +128,33 @@ export default function Dashboard({ auth, produits, hasReperes }) {
                                                     </div>
                                                     
                                                     {auth.user.role === 'client' && (
-                                                        <Link
-                                                            href={route(`commandes.${category.key}.create`, { produit_id: produit.id })}
-                                                            className={`mt-3 w-full block text-center py-1.5 rounded text-xs font-semibold uppercase tracking-wider transition ${
-                                                                produit.quantite_stock > 0 
-                                                                ? 'bg-gray-900 text-white hover:bg-gray-800 shadow-sm' 
-                                                                : 'bg-gray-100 text-gray-400 cursor-not-allowed pointer-events-none'
-                                                            }`}
-                                                        >
-                                                            Commander
-                                                        </Link>
+                                                        !hasReperes ? (
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    setShowAddressModal(true);
+                                                                }}
+                                                                className={`mt-3 w-full block text-center py-1.5 rounded text-xs font-semibold uppercase tracking-wider transition ${
+                                                                    produit.quantite_stock > 0 
+                                                                    ? 'bg-gray-900 text-white hover:bg-gray-800 shadow-sm' 
+                                                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed pointer-events-none'
+                                                                }`}
+                                                                disabled={produit.quantite_stock <= 0}
+                                                            >
+                                                                Commander
+                                                            </button>
+                                                        ) : (
+                                                            <Link
+                                                                href={route(`commandes.${category.key}.create`, { produit_id: produit.id })}
+                                                                className={`mt-3 w-full block text-center py-1.5 rounded text-xs font-semibold uppercase tracking-wider transition ${
+                                                                    produit.quantite_stock > 0 
+                                                                    ? 'bg-gray-900 text-white hover:bg-gray-800 shadow-sm' 
+                                                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed pointer-events-none'
+                                                                }`}
+                                                            >
+                                                                Commander
+                                                            </Link>
+                                                        )
                                                     )}
                                                 </div>
                                             </motion.div>
@@ -167,9 +179,9 @@ export default function Dashboard({ auth, produits, hasReperes }) {
                     >
                         <div className="text-center">
                             <div className="text-5xl mb-4">📍</div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">Ajoutez votre première adresse</h3>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">Adresse de livraison requise</h3>
                             <p className="text-gray-600 mb-6">
-                                Pour faciliter vos futures commandes et livraisons, nous vous invitons à renseigner votre adresse.
+                                Pour pouvoir passer une commande et être livré, vous devez obligatoirement ajouter une adresse de livraison (un repère).
                             </p>
                         </div>
                         <div className="flex flex-col gap-3">
@@ -177,13 +189,13 @@ export default function Dashboard({ auth, produits, hasReperes }) {
                                 href={route('reperes.create')}
                                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg text-center transition"
                             >
-                                Renseigner une adresse
+                                Ajouter une adresse
                             </Link>
                             <button
-                                onClick={dismissAddressModal}
+                                onClick={closeAddressModal}
                                 className="w-full bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold py-3 px-4 rounded-lg text-center transition"
                             >
-                                Ignorer pour le moment
+                                Annuler
                             </button>
                         </div>
                     </motion.div>

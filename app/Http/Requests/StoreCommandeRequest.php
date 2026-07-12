@@ -22,6 +22,9 @@ class StoreCommandeRequest extends FormRequest
             'type_bonbonne' => 'nullable|string',
             'contenant_vide' => 'nullable|boolean',
             'frais_livraison' => 'nullable|numeric|min:0',
+            'date_debut' => 'nullable|date',
+            'date_fin' => 'nullable|date|after_or_equal:date_debut',
+            'poids_estime' => 'nullable|numeric|min:0',
         ];
     }
 }

@@ -30,9 +30,9 @@ export default function Index({ auth, commandes, flash }) {
         'annulee': 'bg-red-100 text-red-800',
     };
 
-    const valider = (id) => patch(route('commandes.valider', id));
+    const valider = (id) => patch(route('partenaire.commandes.valider', id));
     const confirmerRetour = (id) => {
-        post(route('commandes.confirmer_retour', id), { onSuccess: () => setRetourModalId(null) });
+        post(route('partenaire.commandes.confirmer_retour', id), { onSuccess: () => setRetourModalId(null) });
     };
     const confirmerRecuperation = (id) => patch(route('partenaire.commandes.confirmer_recuperation', id));
 

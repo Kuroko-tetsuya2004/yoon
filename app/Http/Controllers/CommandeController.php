@@ -306,6 +306,6 @@ class CommandeController extends Controller
             $livraison->save();
         }
 
-        return redirect()->back()->with('success', 'Vous avez confirmé la réception de votre commande.');
+        return redirect()->route('commandes.show', $commande->id)->with('success', 'Vous avez confirmé la réception de votre commande.');
     }
 }

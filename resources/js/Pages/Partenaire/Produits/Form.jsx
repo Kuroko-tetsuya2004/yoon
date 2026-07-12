@@ -44,8 +44,9 @@ export default function Form({ auth, produit, flash }) {
         e.preventDefault();
         
         if (isEdit) {
-            // Inertia handles PUT with files differently, so we use POST with _method=PUT
-            post(route('partenaire.produits.update', produit.id));
+            post(route('partenaire.produits.update', produit.id), {
+                _method: 'PUT' // Inertia workaround to send files with PUT
+            });
         } else {
             post(route('partenaire.produits.store'));
         }
