@@ -8,7 +8,7 @@ class UpdateLocationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check() && auth()->user()->role === 'livreur';
+        return auth()->check() && in_array(auth()->user()->role, ['livreur', 'partenaire']);
     }
 
     public function rules(): array

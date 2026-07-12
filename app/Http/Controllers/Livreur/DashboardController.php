@@ -18,9 +18,9 @@ class DashboardController extends Controller
         }
 
         $livraisons = Livraison::where('livreur_id', Auth::id())
-                               ->whereNotIn('statut_livraison', ['livree', 'retour_boutique'])
+                               ->whereNotIn('statut_livraison', ['livree'])
                                ->with(['commande.repere', 'commande.client', 'commande.gaz', 'commande.pondereux', 'commande.materiel'])
-                               ->orderByRaw("CASE statut_livraison WHEN 'en_attente' THEN 1 WHEN 'en_route' THEN 2 ELSE 3 END")
+                               ->orderByRaw("CASE statut_livraison WHEN 'en_attente' THEN 1 WHEN 'en_route' THEN 2 WHEN 'retour_boutique' THEN 3 ELSE 4 END")
                                ->get();
 
         $proposition = \App\Models\PropositionLivraison::where('livreur_id', Auth::id())
@@ -70,7 +70,7 @@ class DashboardController extends Controller
             }
             $livraison->partenaire = $partenaire;
             return $livraison;
-        });
+        })->values(); // Force un tableau JSON (pas un objet)
 
         // Nouvelles Statistiques pour le Livreur
         $toutesLesLivraisons = Livraison::where('livreur_id', Auth::id())->with('commande')->get();
@@ -85,17 +85,17 @@ class DashboardController extends Controller
         ];
 
         // Graphique des courses sur 7 jours
-        $coursesGraphique = collect();
+        $coursesGraphique = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i)->format('Y-m-d');
             $count = Livraison::where('livreur_id', Auth::id())
                 ->whereIn('statut_livraison', ['livree', 'retour_boutique'])
                 ->whereDate('updated_at', $date)
                 ->count();
-            $coursesGraphique->push([
+            $coursesGraphique[] = [
                 'date' => now()->subDays($i)->format('d M'),
                 'courses' => $count
-            ]);
+            ];
         }
 
         // Historique des dernières courses
@@ -113,7 +113,7 @@ class DashboardController extends Controller
                     'gains' => $l->commande ? $l->commande->frais_livraison : 0,
                     'statut' => $l->statut_livraison
                 ];
-            });
+            })->values(); // Force un tableau JSON
 
         return inertia('Livreur/Dashboard', [
             'livraisons' => $livraisonsAvecPartenaire,
