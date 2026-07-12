@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, usePage, router } from '@inertiajs/react';
+import { Head, usePage, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { Package, TrendingUp, AlertTriangle, Box, CheckCircle } from 'lucide-react';
@@ -8,34 +7,6 @@ import { Package, TrendingUp, AlertTriangle, Box, CheckCircle } from 'lucide-rea
 export default function Dashboard({ stats, ventesGraphique, topProduits, dernieresCommandes }) {
     const { auth } = usePage().props;
     const formatNumber = (num) => Number(num).toLocaleString('fr-FR');
-    const [updatingLocation, setUpdatingLocation] = useState(false);
-    const [gpsError, setGpsError] = useState(null);
-
-    const registerLocation = () => {
-        if (!navigator.geolocation) {
-            setGpsError("La géolocalisation n'est pas supportée par votre navigateur.");
-            return;
-        }
-        setUpdatingLocation(true);
-        setGpsError(null);
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                router.post(route('partenaire.location.update'), {
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude
-                }, {
-                    preserveScroll: true,
-                    onFinish: () => setUpdatingLocation(false),
-                    onSuccess: () => setGpsError(null)
-                });
-            },
-            (err) => {
-                setUpdatingLocation(false);
-                setGpsError("Impossible de récupérer votre position GPS. Veuillez autoriser l'accès à la localisation.");
-                console.error(err);
-            }
-        );
-    };
 
     const statCards = [
         { label: "Chiffre d'affaires", value: `${formatNumber(stats.ca_genere)} FCFA`, icon: <TrendingUp size={24} />, color: 'text-emerald-600', bg: 'bg-emerald-50' },
@@ -67,21 +38,17 @@ export default function Dashboard({ stats, ventesGraphique, topProduits, dernier
                                         ⚠️ Votre boutique n'est pas encore géolocalisée. Vos livraisons ne pourront pas être assignées automatiquement !
                                     </p>
                                 )}
-                                {gpsError && (
-                                    <p className="text-sm text-red-500 mt-2 font-medium">❌ {gpsError}</p>
-                                )}
                             </div>
-                            <button
-                                disabled={updatingLocation}
-                                onClick={registerLocation}
-                                className={`w-full sm:w-auto font-bold py-2.5 px-5 rounded-xl shadow transition flex items-center justify-center gap-2 ${
+                            <Link
+                                href={route('partenaire.location')}
+                                className={`w-full sm:w-auto font-bold py-2.5 px-5 rounded-xl shadow transition flex items-center justify-center gap-2 text-center ${
                                     auth.user.latitude && auth.user.longitude
                                         ? 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                                         : 'bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/20'
                                 }`}
                             >
-                                {updatingLocation ? 'Enregistrement...' : 'Enregistrer ma position GPS actuelle'}
-                            </button>
+                                {auth.user.latitude && auth.user.longitude ? 'Modifier ma position GPS' : 'Géolocaliser ma boutique'}
+                            </Link>
                         </div>
                     </div>
                     

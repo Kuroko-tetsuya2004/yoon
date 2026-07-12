@@ -63,6 +63,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['role:partenaire'])->prefix('partenaire')->name('partenaire.')->group(function () {
         Route::redirect('/', '/partenaire/dashboard');
         Route::get('/dashboard', [\App\Http\Controllers\Partenaire\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/location', [\App\Http\Controllers\Partenaire\DashboardController::class, 'showLocation'])->name('location');
         Route::get('/commandes', [\App\Http\Controllers\Partenaire\CommandeController::class, 'index'])->name('commandes.index');
         Route::patch('/commandes/{commande}/valider', [\App\Http\Controllers\Partenaire\CommandeController::class, 'valider'])->where('commande', '[0-9]+')->name('commandes.valider');
         Route::patch('/commandes/{commande}/refuser', [\App\Http\Controllers\Partenaire\CommandeController::class, 'refuser'])->where('commande', '[0-9]+')->name('commandes.refuser');

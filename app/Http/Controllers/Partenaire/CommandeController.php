@@ -215,6 +215,12 @@ class CommandeController extends Controller
         $user = \Illuminate\Support\Facades\Auth::user();
         $user->latitude = $request->latitude;
         $user->longitude = $request->longitude;
+        if ($request->has('adresse')) {
+            $user->adresse = $request->adresse;
+        }
+        if ($request->has('description_boutique')) {
+            $user->description_boutique = $request->description_boutique;
+        }
         $user->save();
 
         broadcast(new \App\Events\LocationUpdated($user->id, $user->latitude, $user->longitude))->toOthers();

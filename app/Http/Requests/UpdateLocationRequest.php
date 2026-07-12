@@ -16,6 +16,8 @@ class UpdateLocationRequest extends FormRequest
         return [
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
+            'adresse' => 'nullable|string|max:255',
+            'description_boutique' => 'nullable|string|max:1000',
         ];
     }
 }

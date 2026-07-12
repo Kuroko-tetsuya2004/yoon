@@ -88,4 +88,14 @@ class DashboardController extends Controller
             'dernieresCommandes' => $dernieresCommandes
         ]);
     }
+
+    public function showLocation(Request $request)
+    {
+        if ($request->user()->role !== 'partenaire') abort(403);
+        return inertia('Partenaire/Location', [
+            'auth' => [
+                'user' => $request->user(),
+            ]
+        ]);
+    }
 }
