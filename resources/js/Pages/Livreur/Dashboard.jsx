@@ -97,6 +97,18 @@ function DashboardContent({ auth, livraisons: livraisonsRaw, proposition, parten
         return () => { if (window.Echo) window.Echo.leave(`livreur.${auth.user.id}`); };
     }, [auth?.user?.id]);
 
+    // ── Polling de secours: rafraîchissement automatique des données toutes les 10s ──
+    useEffect(() => {
+        const interval = setInterval(() => {
+            router.reload({
+                only: ['livraisons', 'proposition', 'partenaireProposition', 'stats', 'historique'],
+                preserveState: true,
+                preserveScroll: true
+            });
+        }, 10000);
+        return () => clearInterval(interval);
+    }, []);
+
     // ── Affichage de l'itinéraire sur la carte ───────────────────────────────
     const showMap = (livraison) => {
         setSelectedLivraison(livraison);
