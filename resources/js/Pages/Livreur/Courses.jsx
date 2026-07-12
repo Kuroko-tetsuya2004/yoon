@@ -347,7 +347,7 @@ function CoursesContent({ auth, livraisons: livraisonsRaw, proposition, partenai
                             <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 h-[450px] md:h-[600px] sticky top-6 flex flex-col">
                                 <h3 className="text-lg font-medium text-slate-900 mb-2">{getMapTitle()}</h3>
                                 <div ref={mapRef} className="w-full flex-grow rounded-lg bg-gray-100 relative z-0 border border-slate-200">
-                                    {livreurs.length === 0 && (
+                                    {livraisons.length === 0 && (
                                         <div className="absolute inset-0 flex items-center justify-center text-gray-400 z-10 bg-gray-50 bg-opacity-90 rounded-lg">
                                             <div className="text-center">
                                                 <div className="text-4xl mb-2">🏍️</div>
@@ -356,7 +356,7 @@ function CoursesContent({ auth, livraisons: livraisonsRaw, proposition, partenai
                                             </div>
                                         </div>
                                     )}
-                                    {livreurs.length > 0 && !selectedLivraison && (
+                                    {livraisons.length > 0 && !selectedLivraison && (
                                         <div className="absolute inset-0 flex items-center justify-center text-gray-400 z-10 bg-gray-50 bg-opacity-90 rounded-lg">
                                             <div className="text-center">
                                                 <div className="text-4xl mb-2">🗺️</div>
