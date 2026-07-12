@@ -120,3 +120,19 @@ Route::get('/sys/clear-cache', function () {
     \Illuminate\Support\Facades\Artisan::call('route:clear');
     return 'Cache cleared successfully.';
 });
+
+Route::get('/sys/fix-gps', function () {
+    $updated = \App\Models\User::where('role', 'partenaire')
+        ->where(function($q) {
+            $q->whereNull('latitude')
+              ->orWhereNull('longitude')
+              ->orWhere('latitude', 0)
+              ->orWhere('longitude', 0);
+        })
+        ->update([
+            'latitude' => 14.735,
+            'longitude' => -17.445,
+            'adresse' => 'Touba Gaz Camberene, Dakar'
+        ]);
+    return "Updated {$updated} partners with default coordinates.";
+});
