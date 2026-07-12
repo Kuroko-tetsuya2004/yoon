@@ -47,8 +47,8 @@ docker compose up -d
 ## 5. Initialiser l'application Laravel
 Une fois les conteneurs lancés, générez la clé de sécurité de l'application :
 ```bash
-docker compose exec laravel.test php artisan key:generate
-```
+
+```docker compose exec laravel.test php artisan key:generate
 
 Lancez les migrations pour créer la structure de la base de données, ainsi que les seeders pour pré-remplir la base avec des comptes de test (Admin, Livreur, Partenaire, Client) :
 ```bash
