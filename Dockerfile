@@ -29,7 +29,8 @@ COPY . .
 
 # Installer les dépendances PHP (sans exécuter les scripts qui font planter la compilation car la base de données n'est pas encore connectée)
 ENV COMPOSER_ALLOW_SUPERUSER=1
-RUN composer install --no-dev --optimize-autoloader --no-scripts --ignore-platform-reqs
+RUN composer install --no-dev --optimize-autoloader --no-scripts --ignore-platform-reqs && \
+    php artisan package:discover --ansi 2>/dev/null || true
 
 # Installer les dépendances JS
 RUN npm install
@@ -61,8 +62,10 @@ ENV LOG_CHANNEL=stderr
 RUN echo '#!/bin/bash' > /usr/local/bin/start.sh && \
     echo 'sed -i "s/\${PORT}/$PORT/g" /etc/apache2/ports.conf' >> /usr/local/bin/start.sh && \
     echo 'sed -i "s/\${PORT}/$PORT/g" /etc/apache2/sites-available/000-default.conf' >> /usr/local/bin/start.sh && \
-    echo 'php artisan optimize' >> /usr/local/bin/start.sh && \
+    echo 'php artisan config:clear' >> /usr/local/bin/start.sh && \
+    echo 'php artisan cache:clear' >> /usr/local/bin/start.sh && \
     echo 'php artisan package:discover --ansi' >> /usr/local/bin/start.sh && \
+    echo 'php artisan optimize' >> /usr/local/bin/start.sh && \
     echo 'php artisan migrate --force' >> /usr/local/bin/start.sh && \
     echo 'php artisan storage:link' >> /usr/local/bin/start.sh && \
     echo 'chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public/build' >> /usr/local/bin/start.sh && \
