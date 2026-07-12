@@ -220,7 +220,7 @@ export default function Dashboard({ auth, livraisons, proposition, partenairePro
                         </h2>
                         <div className="h-64">
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={coursesGraphique} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                <AreaChart data={Array.isArray(coursesGraphique) ? coursesGraphique : Object.values(coursesGraphique)} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="colorCourses" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3}/>
@@ -372,7 +372,7 @@ export default function Dashboard({ auth, livraisons, proposition, partenairePro
                         </div>
 
                         {/* Carte - affichée uniquement si des livraisons existent */}
-                        {livraisons.length > 0 && (
+                        {Object.keys(livraisons).length > 0 && (
                         <div className="bg-white p-4 rounded-lg shadow-sm h-[300px] md:h-[500px] sticky top-6 flex flex-col mt-4 md:mt-0">
                             <h3 className="text-lg font-medium text-gray-900 mb-2">{getMapTitle()}</h3>
                             <div ref={mapRef} className="w-full flex-grow rounded bg-gray-100 relative z-0">
