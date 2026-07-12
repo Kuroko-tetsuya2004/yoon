@@ -114,12 +114,7 @@ function DashboardContent({ auth, livraisons: livraisonsRaw, proposition, parten
         setSelectedLivraison(livraison);
         if (!mapInstance.current) return;
 
-        // Supprimer l'ancien itinéraire
-        if (routingControl.current) {
-            try { mapInstance.current.removeControl(routingControl.current); } catch (_) {}
-            routingControl.current = null;
-        }
-        // Supprimer les anciens marqueurs
+        // Supprimer uniquement les anciens marqueurs (l'itinéraire sera mis à jour par setWaypoints)
         mapInstance.current.eachLayer(layer => {
             if (layer instanceof L.Marker) mapInstance.current.removeLayer(layer);
         });
@@ -143,16 +138,26 @@ function DashboardContent({ auth, livraisons: livraisonsRaw, proposition, parten
                 waypoints = [L.latLng(livreurLat, livreurLng), L.latLng(partLat, partLng)];
             }
 
-            if (waypoints.length === 0) return;
+            if (waypoints.length === 0) {
+                if (routingControl.current) {
+                    try { mapInstance.current.removeControl(routingControl.current); } catch (_) {}
+                    routingControl.current = null;
+                }
+                return;
+            }
 
-            routingControl.current = L.Routing.control({
-                waypoints,
-                routeWhileDragging: false,
-                addWaypoints: false,
-                fitSelectedRoutes: true,
-                show: false,
-                lineOptions: { styles: [{ color: '#4f46e5', weight: 6 }] }
-            }).addTo(mapInstance.current);
+            if (!routingControl.current) {
+                routingControl.current = L.Routing.control({
+                    waypoints,
+                    routeWhileDragging: false,
+                    addWaypoints: false,
+                    fitSelectedRoutes: true,
+                    show: false,
+                    lineOptions: { styles: [{ color: '#4f46e5', weight: 6 }] }
+                }).addTo(mapInstance.current);
+            } else {
+                routingControl.current.setWaypoints(waypoints);
+            }
 
             // Marqueur boutique
             if (partLat && partLng) {
