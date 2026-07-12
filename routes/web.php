@@ -83,6 +83,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['role:livreur'])->prefix('livreur')->name('livreur.')->group(function () {
         Route::redirect('/', '/livreur/dashboard');
         Route::get('/dashboard', [\App\Http\Controllers\Livreur\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/courses', [\App\Http\Controllers\Livreur\DashboardController::class, 'courses'])->name('courses');
         Route::patch('/propositions/{proposition}/accepter', [\App\Http\Controllers\Livreur\DashboardController::class, 'accepterProposition'])->name('propositions.accepter');
         Route::patch('/propositions/{proposition}/refuser', [\App\Http\Controllers\Livreur\DashboardController::class, 'refuserProposition'])->name('propositions.refuser');
         Route::patch('/livraisons/{livraison}', [\App\Http\Controllers\Livreur\DashboardController::class, 'updateStatut'])->name('livraisons.update');

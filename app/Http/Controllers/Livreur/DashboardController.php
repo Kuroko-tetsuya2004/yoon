@@ -135,6 +135,85 @@ class DashboardController extends Controller
         ]);
     }
 
+    public function courses()
+    {
+        if (Auth::user()->role !== 'livreur') abort(403);
+        if (Auth::user()->statut_validation !== 'valide') {
+            Auth::logout();
+            return redirect()->route('login')->with('status', 'Votre compte est en attente de validation par un administrateur.');
+        }
+
+        $livraisons = Livraison::where('livreur_id', Auth::id())
+                               ->whereNotIn('statut_livraison', ['livree'])
+                               ->with(['commande.repere', 'commande.client', 'commande.gaz', 'commande.pondereux', 'commande.materiel'])
+                               ->orderByRaw("CASE statut_livraison WHEN 'en_attente' THEN 1 WHEN 'en_route' THEN 2 WHEN 'retour_boutique' THEN 3 ELSE 4 END")
+                               ->get();
+
+        $proposition = \App\Models\PropositionLivraison::where('livreur_id', Auth::id())
+                                                       ->where('statut', 'en_attente')
+                                                       ->with(['commande.repere', 'commande.client'])
+                                                       ->first();
+
+        $partenaire = null;
+        if ($proposition && $proposition->commande) {
+            $commande = $proposition->commande;
+            if ($commande->type_commande === 'gaz' && $commande->gaz) {
+                $partenaire = \App\Models\User::find($commande->gaz->partenaire_id);
+            } elseif ($commande->type_commande === 'pondereux' && $commande->pondereux) {
+                $partenaire = \App\Models\User::find($commande->pondereux->partenaire_id);
+            } elseif ($commande->type_commande === 'materiel' && $commande->materiel) {
+                $partenaire = \App\Models\User::find($commande->materiel->partenaire_id);
+            } elseif ($commande->type_commande === 'evenementielle' && $commande->evenementielle) {
+                $prestation = $commande->evenementielle->prestations()->first();
+                if ($prestation) {
+                    $partenaire = \App\Models\User::find($prestation->partenaire_id);
+                }
+            }
+            
+            if ($partenaire && $commande->repere && $partenaire->latitude && $partenaire->longitude) {
+                $proposition->distance_km = round(\App\Services\LivraisonService::calculerDistanceRoutiere(
+                    $partenaire->latitude, $partenaire->longitude,
+                    $commande->repere->latitude, $commande->repere->longitude
+                ), 2);
+                $proposition->frais_livraison = $commande->frais_livraison;
+                $proposition->adresse_depart = $partenaire->adresse ?? 'Adresse boutique non définie';
+                $proposition->adresse_arrivee = $commande->repere->adresse ?? 'Adresse client non définie';
+            } else if ($partenaire && $commande->repere) {
+                $proposition->distance_km = 0;
+                $proposition->frais_livraison = $commande->frais_livraison;
+                $proposition->adresse_depart = $partenaire->adresse ?? 'Adresse boutique non définie';
+                $proposition->adresse_arrivee = $commande->repere->adresse ?? 'Adresse client non définie';
+            }
+        }
+
+        $livraisonsAvecPartenaire = $livraisons->map(function ($livraison) {
+            $commande = $livraison->commande;
+            $partenaire = null;
+            if ($commande) {
+                if ($commande->type_commande === 'gaz' && $commande->gaz) {
+                    $partenaire = \App\Models\User::find($commande->gaz->partenaire_id);
+                } elseif ($commande->type_commande === 'pondereux' && $commande->pondereux) {
+                    $partenaire = \App\Models\User::find($commande->pondereux->partenaire_id);
+                } elseif ($commande->type_commande === 'materiel' && $commande->materiel) {
+                    $partenaire = \App\Models\User::find($commande->materiel->partenaire_id);
+                } elseif ($commande->type_commande === 'evenementielle' && $commande->evenementielle) {
+                    $prestation = $commande->evenementielle->prestations()->first();
+                    if ($prestation) {
+                        $partenaire = \App\Models\User::find($prestation->partenaire_id);
+                    }
+                }
+            }
+            $livraison->partenaire = $partenaire;
+            return $livraison;
+        })->values();
+
+        return inertia('Livreur/Courses', [
+            'livraisons' => $livraisonsAvecPartenaire,
+            'proposition' => $proposition,
+            'partenaireProposition' => $partenaire,
+        ]);
+    }
+
     public function accepterProposition(Request $request, \App\Models\PropositionLivraison $proposition)
     {
         if (Auth::user()->role !== 'livreur' || $proposition->livreur_id !== Auth::id()) abort(403);
@@ -147,7 +226,7 @@ class DashboardController extends Controller
             'statut_livraison' => 'en_attente' // En attente de récupération par le livreur
         ]);
 
-        return redirect()->route('livreur.dashboard')->with('success', 'Commande acceptée ! Veuillez vous rendre à la boutique.');
+        return redirect()->route('livreur.courses')->with('success', 'Commande acceptée ! Veuillez vous rendre à la boutique.');
     }
 
     public function refuserProposition(Request $request, \App\Models\PropositionLivraison $proposition)
@@ -159,7 +238,7 @@ class DashboardController extends Controller
         // Chercher le livreur suivant
         \App\Services\LivraisonService::assignerLivreurProche($proposition->commande);
 
-        return redirect()->route('livreur.dashboard')->with('success', 'Commande refusée.');
+        return redirect()->route('livreur.courses')->with('success', 'Commande refusée.');
     }
 
     public function updateStatut(Request $request, Livraison $livraison)

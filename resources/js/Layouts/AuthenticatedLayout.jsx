@@ -33,7 +33,8 @@ export default function AuthenticatedLayout({ header, children }) {
             );
         } else if (auth.user.role === 'livreur') {
             links.push(
-                { name: 'Tableau de bord', href: route('livreur.dashboard'), active: route().current('livreur.dashboard'), icon: '📊' }
+                { name: 'Tableau de bord', href: route('livreur.dashboard'), active: route().current('livreur.dashboard'), icon: '📊' },
+                { name: 'Mes Courses', href: route('livreur.courses'), active: route().current('livreur.courses'), icon: '🏍️' }
             );
         } else if (auth.user.role === 'administrateur') {
             links.push(
