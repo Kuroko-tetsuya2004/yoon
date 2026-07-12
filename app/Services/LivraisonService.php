@@ -196,11 +196,11 @@ class LivraisonService
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error("LivraisonService: Echec de diffusion broadcast NouvellePropositionLivraison: " . $e->getMessage());
             }
-            
-            // Sans worker de queue sur Render, on utilise dispatchSync pour expiration directe
-            // Si un worker est ajouté à l'avenir, remplacer par: ExpirePropositionJob::dispatch($proposition->id)->delay(now()->addMinute());
-            \App\Jobs\ExpirePropositionJob::dispatchSync($proposition->id);
-            
+
+            // NOTE: L'auto-expiration (ExpirePropositionJob) est désactivée car l'environnement
+            // Render Free n'a pas de worker de queue. dispatchSync() causait une récursion infinie.
+            // Le livreur accepte ou refuse manuellement. Le partenaire peut relancer via "Chercher un livreur".
+
             return true;
         }
 
