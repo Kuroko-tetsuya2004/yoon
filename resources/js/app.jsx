@@ -1,5 +1,7 @@
 import './bootstrap';
 import '../css/app.css';
+import L from 'leaflet';
+window.L = L;
 
 import { createRoot } from 'react-dom/client';
 import { createInertiaApp } from '@inertiajs/react';
