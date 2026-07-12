@@ -18,6 +18,9 @@ class EvenementController extends Controller
     public function create(Request $request)
     {
         $reperes = $request->user()->reperes;
+        if ($reperes->isEmpty()) {
+            return redirect()->route('reperes.index')->with('success', 'Veuillez d\'abord créer une adresse de livraison (repère) pour votre événement.');
+        }
         return inertia('Client/Evenements/Create', ['reperes' => $reperes]);
     }
 
