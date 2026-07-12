@@ -156,3 +156,12 @@ Route::get('/sys/reset-commandes', function () {
         return 'Erreur lors de la suppression : ' . $e->getMessage();
     }
 });
+
+Route::get('/sys/delete-materiel', function () {
+    try {
+        $deleted = \App\Models\Produit::where('categorie', 'materiel')->delete();
+        return "Suppression réussie : {$deleted} produit(s) de la catégorie 'matériel' ont été supprimés.";
+    } catch (\Exception $e) {
+        return 'Erreur lors de la suppression : ' . $e->getMessage();
+    }
+});
