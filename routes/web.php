@@ -10,12 +10,6 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/clear-app-cache-secret', function () {
-    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
-    \Illuminate\Support\Facades\Artisan::call('cache:clear');
-    return 'Cache cleared successfully.';
-});
-
 Route::get('/politique-confidentialite', function () {
     return inertia('PolitiqueConfidentialite');
 })->name('politique-confidentialite');
