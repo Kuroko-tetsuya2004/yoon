@@ -298,12 +298,12 @@ export default function Dashboard({ auth, livraisons, proposition, partenairePro
                         {/* Liste des livraisons */}
                         <div>
                             <h3 className="text-lg font-medium text-gray-900 mb-4">Mes livraisons en cours</h3>
-                            {livraisons.length === 0 ? (
+                            {(!livraisons || Object.keys(livraisons).length === 0) ? (
                                 <div className="bg-white p-6 rounded-lg shadow-sm text-gray-500 text-center">
                                     Aucune livraison en cours pour le moment.
                                 </div>
                             ) : (
-                                livraisons.map(livraison => (
+                                Object.values(livraisons).map(livraison => (
                                     <motion.div 
                                         key={livraison.id}
                                         whileHover={{ scale: 1.01 }}
@@ -397,7 +397,7 @@ export default function Dashboard({ auth, livraisons, proposition, partenairePro
                             </h2>
                         </div>
                         <div className="overflow-x-auto">
-                            {!historique || historique.length === 0 ? (
+                            {(!historique || Object.keys(historique).length === 0) ? (
                                 <div className="p-6 text-center text-slate-500">Aucune course terminée pour le moment.</div>
                             ) : (
                                 <table className="w-full text-left border-collapse">
@@ -411,7 +411,7 @@ export default function Dashboard({ auth, livraisons, proposition, partenairePro
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 text-sm">
-                                        {historique.map(course => (
+                                        {Object.values(historique).map(course => (
                                             <tr key={course.id} className="hover:bg-slate-50 transition-colors">
                                                 <td className="p-4 font-medium text-slate-900">#{course.id}</td>
                                                 <td className="p-4 text-slate-600">{course.date}</td>

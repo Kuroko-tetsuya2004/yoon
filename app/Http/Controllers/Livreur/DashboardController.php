@@ -54,12 +54,14 @@ class DashboardController extends Controller
         $livraisonsAvecPartenaire = $livraisons->map(function ($livraison) {
             $commande = $livraison->commande;
             $partenaire = null;
-            if ($commande->type_commande === 'gaz' && $commande->gaz) {
-                $partenaire = \App\Models\User::find($commande->gaz->partenaire_id);
-            } elseif ($commande->type_commande === 'pondereux' && $commande->pondereux) {
-                $partenaire = \App\Models\User::find($commande->pondereux->partenaire_id);
-            } elseif ($commande->type_commande === 'materiel' && $commande->materiel) {
-                $partenaire = \App\Models\User::find($commande->materiel->partenaire_id);
+            if ($commande) {
+                if ($commande->type_commande === 'gaz' && $commande->gaz) {
+                    $partenaire = \App\Models\User::find($commande->gaz->partenaire_id);
+                } elseif ($commande->type_commande === 'pondereux' && $commande->pondereux) {
+                    $partenaire = \App\Models\User::find($commande->pondereux->partenaire_id);
+                } elseif ($commande->type_commande === 'materiel' && $commande->materiel) {
+                    $partenaire = \App\Models\User::find($commande->materiel->partenaire_id);
+                }
             }
             $livraison->partenaire = $partenaire;
             return $livraison;
@@ -73,7 +75,7 @@ class DashboardController extends Controller
 
         $stats = [
             'total_courses' => $livraisonsTerminees->count(),
-            'gains_estimes' => $livraisonsTerminees->sum(function($l) { return $l->commande->frais_livraison; }),
+            'gains_estimes' => $livraisonsTerminees->sum(function($l) { return $l->commande ? $l->commande->frais_livraison : 0; }),
             'en_cours' => $livraisons->count(),
         ];
 
@@ -102,8 +104,8 @@ class DashboardController extends Controller
                 return [
                     'id' => $l->id,
                     'date' => $l->updated_at->format('d/m/Y H:i'),
-                    'client' => $l->commande->client->name ?? 'Inconnu',
-                    'gains' => $l->commande->frais_livraison,
+                    'client' => $l->commande ? ($l->commande->client->name ?? 'Inconnu') : 'Inconnu',
+                    'gains' => $l->commande ? $l->commande->frais_livraison : 0,
                     'statut' => $l->statut_livraison
                 ];
             });
