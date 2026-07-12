@@ -309,12 +309,13 @@ class CommandeController extends Controller
 
         if (!$isOwner) abort(403);
 
-        $success = \App\Services\LivraisonService::assignerLivreurProche($commande);
+        // On force une nouvelle recherche (annule la proposition en attente s'il y en a une)
+        $success = \App\Services\LivraisonService::assignerLivreurProche($commande, true);
 
         if ($success) {
             return back()->with('success', 'Recherche lancée ! Une proposition a été envoyée au livreur le plus proche.');
         }
 
-        return back()->with('error', 'Aucun livreur disponible pour le moment. Veuillez vérifier que des livreurs sont validés et configurés disponibles.');
+        return back()->with('error', 'Aucun livreur disponible pour le moment (ou tous ont déjà refusé cette commande). Veuillez réessayer plus tard.');
     }
 }

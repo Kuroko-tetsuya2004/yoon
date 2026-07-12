@@ -59,7 +59,7 @@ class LivraisonService
      * Trouve le livreur disponible le plus proche qui n'a pas encore refusé cette commande,
      * et crée une PropositionLivraison.
      */
-    public static function assignerLivreurProche(Commande $commande)
+    public static function assignerLivreurProche(Commande $commande, $forcerNouvelleRecherche = false)
     {
         // Si la commande n'est pas acceptée, on ne fait rien
         if ($commande->statut !== 'acceptee') {
@@ -71,7 +71,13 @@ class LivraisonService
                                                   ->where('statut', 'en_attente')
                                                   ->first();
         if ($propositionEnCours) {
-            return false; // On attend que le livreur actuel réponde
+            if ($forcerNouvelleRecherche) {
+                // Le partenaire a cliqué sur "Chercher un livreur", on expire la proposition actuelle
+                // en la marquant comme refusée pour passer au livreur suivant.
+                $propositionEnCours->update(['statut' => 'refusee']);
+            } else {
+                return false; // On attend que le livreur actuel réponde
+            }
         }
 
         // Si une livraison définitive existe déjà, on ne fait rien
