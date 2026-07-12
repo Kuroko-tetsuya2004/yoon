@@ -66,18 +66,14 @@ function DashboardContent({ auth, livraisons: livraisonsRaw, proposition, parten
     }, [livraisons.length]); // Re-initialise si des livraisons apparaissent
 
     // ── Géolocalisation: envoi de position toutes les 30s ───────────────────
-    const lastPosRef = useRef({ lat: null, lng: null });
     useEffect(() => {
         const sendLocationUpdate = () => {
             if (!navigator.geolocation) return;
             navigator.geolocation.getCurrentPosition((position) => {
                 const newLat = position.coords.latitude;
                 const newLng = position.coords.longitude;
-                if (lastPosRef.current.lat !== newLat || lastPosRef.current.lng !== newLng) {
-                    axios.post(route('livreur.location.update'), { latitude: newLat, longitude: newLng })
-                        .then(() => { lastPosRef.current = { lat: newLat, lng: newLng }; })
-                        .catch(err => console.error('Erreur MAJ GPS:', err));
-                }
+                axios.post(route('livreur.location.update'), { latitude: newLat, longitude: newLng })
+                    .catch(err => console.error('Erreur MAJ GPS:', err));
             }, (err) => console.warn('Géolocalisation indisponible:', err));
         };
 
