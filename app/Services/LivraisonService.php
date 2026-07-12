@@ -32,18 +32,8 @@ class LivraisonService
      */
     public static function calculerDistanceRoutiere($lat1, $lon1, $lat2, $lon2)
     {
-        try {
-            $response = \Illuminate\Support\Facades\Http::timeout(3)->get("http://router.project-osrm.org/route/v1/driving/{$lon1},{$lat1};{$lon2},{$lat2}?overview=false");
-            if ($response->successful()) {
-                $data = $response->json();
-                if (isset($data['routes'][0]['distance'])) {
-                    return $data['routes'][0]['distance'] / 1000; // Return in km
-                }
-            }
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::warning("OSRM API failed, fallback to Haversine: " . $e->getMessage());
-        }
-        
+        // En local et en production, OSRM synchrone bloque ou ralentit trop l'assignation.
+        // On utilise la formule de Haversine directement pour un calcul instantané et 100% fiable.
         return self::calculerDistance($lat1, $lon1, $lat2, $lon2);
     }
 
@@ -106,9 +96,13 @@ class LivraisonService
             }
         }
 
-        if (!$partenaire || !$partenaire->latitude || !$partenaire->longitude) {
-            \Illuminate\Support\Facades\Log::warning("LivraisonService: Partenaire sans coordonnées GPS pour commande #{$commande->id}. Assignation impossible.");
-            return false; // Impossible de calculer la distance sans les coordonnées de la boutique
+        if (!$partenaire) {
+            \Illuminate\Support\Facades\Log::warning("LivraisonService: Partenaire introuvable pour commande #{$commande->id}. Assignation impossible.");
+            return false;
+        }
+
+        if (!$partenaire->latitude || !$partenaire->longitude) {
+            \Illuminate\Support\Facades\Log::warning("LivraisonService: Partenaire sans coordonnées GPS pour commande #{$commande->id}. Assignation poursuivie sans calcul de distance.");
         }
 
         if ($partenaire->propre_service_livraison) {
@@ -197,7 +191,11 @@ class LivraisonService
             $proposition->lat_depart = $partenaire->latitude;
             $proposition->lon_depart = $partenaire->longitude;
             
-            event(new \App\Events\NouvellePropositionLivraison($proposition));
+            try {
+                event(new \App\Events\NouvellePropositionLivraison($proposition));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("LivraisonService: Echec de diffusion broadcast NouvellePropositionLivraison: " . $e->getMessage());
+            }
             
             // Dispatch du job pour expirer la proposition après 1 minute
             \App\Jobs\ExpirePropositionJob::dispatch($proposition->id)->delay(now()->addMinute());
