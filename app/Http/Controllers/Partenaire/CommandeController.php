@@ -219,7 +219,11 @@ class CommandeController extends Controller
 
         broadcast(new \App\Events\LocationUpdated($user->id, $user->latitude, $user->longitude))->toOthers();
 
-        return response()->json(['success' => true]);
+        if ($request->expectsJson() && !$request->hasHeader('X-Inertia')) {
+            return response()->json(['success' => true]);
+        }
+
+        return back()->with('success', 'Localisation de votre boutique enregistrée avec succès.');
     }
 
     public function suiviLivraison(Request $request, Commande $commande)
