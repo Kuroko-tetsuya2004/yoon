@@ -40,9 +40,19 @@ export default function Index({ auth, produits, flash }) {
                                     📍 Localisation GPS de votre boutique
                                 </h3>
                                 {auth.user.latitude && auth.user.longitude ? (
-                                    <p className="text-sm text-emerald-600 mt-1">
-                                        Position enregistrée : <span className="font-bold">{Number(auth.user.latitude).toFixed(5)}, {Number(auth.user.longitude).toFixed(5)}</span> ({auth.user.adresse || 'Adresse textuelle non définie'})
-                                    </p>
+                                    <div className="mt-2 space-y-1">
+                                        <p className="text-sm text-slate-700">
+                                            📍 <span className="font-semibold text-slate-900">Adresse :</span> {auth.user.adresse || 'Aucune adresse textuelle enregistrée'}
+                                        </p>
+                                        {auth.user.description_boutique && (
+                                            <p className="text-sm text-slate-500">
+                                                📝 <span className="font-semibold text-slate-600">Indications :</span> {auth.user.description_boutique}
+                                            </p>
+                                        )}
+                                        <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1 font-medium">
+                                            ✅ Boutique géolocalisée (Coordonnées : {Number(auth.user.latitude).toFixed(6)}, {Number(auth.user.longitude).toFixed(6)})
+                                        </p>
+                                    </div>
                                 ) : (
                                     <p className="text-sm text-rose-600 mt-1">
                                         ⚠️ Votre boutique n'est pas encore géolocalisée. Vos livraisons ne pourront pas être assignées automatiquement !
