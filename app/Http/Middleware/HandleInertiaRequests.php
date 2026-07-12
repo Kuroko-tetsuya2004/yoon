@@ -60,6 +60,9 @@ class HandleInertiaRequests extends Middleware
                     'photo_devanture'   => $user->photo_devanture,
                     'description_boutique' => $user->description_boutique,
                     'propre_service_livraison' => $user->propre_service_livraison ?? false,
+                    'latitude'          => $user->latitude,
+                    'longitude'         => $user->longitude,
+                    'adresse'           => $user->adresse,
                 ] : null,
             ],
             'flash' => [
