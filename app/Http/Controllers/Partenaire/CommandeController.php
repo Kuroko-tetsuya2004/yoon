@@ -229,7 +229,7 @@ class CommandeController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return back()->with('success', 'Localisation de votre boutique enregistrée avec succès.');
+        return redirect()->route('partenaire.dashboard')->with('success', 'Localisation de votre boutique enregistrée avec succès.');
     }
 
     public function suiviLivraison(Request $request, Commande $commande)
