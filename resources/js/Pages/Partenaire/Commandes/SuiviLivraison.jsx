@@ -16,8 +16,8 @@ export default function SuiviLivraison({ auth, commande }) {
         if (commande.statut === 'en_livraison' && commande.livraison?.livreur && mapRef.current) {
             const livreurLat = commande.livraison.livreur.latitude;
             const livreurLng = commande.livraison.livreur.longitude;
-            const clientLat = commande.repere.latitude;
-            const clientLng = commande.repere.longitude;
+            const clientLat = commande.repere?.latitude ?? 0;
+            const clientLng = commande.repere?.longitude ?? 0;
 
             if (livreurLat && livreurLng && clientLat && clientLng) {
                 mapInstance.current = L.map(mapRef.current).setView([livreurLat, livreurLng], 14);

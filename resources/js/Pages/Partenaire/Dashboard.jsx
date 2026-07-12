@@ -116,7 +116,7 @@ export default function Dashboard({ stats, ventesGraphique, topProduits, dernier
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 text-sm">
-                                        {dernieresCommandes.map(cmd => (
+                                        {Object.values(dernieresCommandes).map(cmd => (
                                             <tr key={cmd.id} className="hover:bg-slate-50 transition-colors">
                                                 <td className="p-4 font-medium text-slate-900">#{cmd.id}</td>
                                                 <td className="p-4 text-slate-600">{cmd.date}</td>
