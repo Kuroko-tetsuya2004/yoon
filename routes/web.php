@@ -55,6 +55,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/commandes/materiel/create', [\App\Http\Controllers\CommandeController::class, 'createMateriel'])->name('commandes.materiel.create');
     Route::post('/commandes/materiel', [\App\Http\Controllers\CommandeController::class, 'storeMateriel'])->name('commandes.materiel.store');
     Route::get('/commandes/{commande}', [\App\Http\Controllers\CommandeController::class, 'show'])->where('commande', '[0-9]+')->name('commandes.show');
+    Route::get('/commandes/{commande}/livraison', [\App\Http\Controllers\CommandeController::class, 'suiviLivraison'])->where('commande', '[0-9]+')->name('commandes.suivi_livraison');
     Route::get('/commandes/{commande}/livreur-location', [\App\Http\Controllers\CommandeController::class, 'getLivreurLocation'])->where('commande', '[0-9]+')->name('commandes.livreur_location');
     Route::post('/commandes/{commande}/confirmer-reception', [\App\Http\Controllers\CommandeController::class, 'confirmerReception'])->where('commande', '[0-9]+')->name('commandes.confirmer_reception');
 
@@ -67,6 +68,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('/commandes/{commande}/refuser', [\App\Http\Controllers\Partenaire\CommandeController::class, 'refuser'])->where('commande', '[0-9]+')->name('commandes.refuser');
         Route::post('/commandes/{commande}/confirmer-retour', [\App\Http\Controllers\Partenaire\CommandeController::class, 'confirmerRetour'])->where('commande', '[0-9]+')->name('commandes.confirmer_retour');
         Route::patch('/commandes/{commande}/confirmer-recuperation', [\App\Http\Controllers\Partenaire\CommandeController::class, 'confirmerRecuperation'])->name('partenaire.commandes.confirmer_recuperation');
+        Route::get('/commandes/{commande}/livraison', [\App\Http\Controllers\Partenaire\CommandeController::class, 'suiviLivraison'])->where('commande', '[0-9]+')->name('commandes.suivi_livraison');
+        Route::get('/commandes/{commande}/livreur-location', [\App\Http\Controllers\Partenaire\CommandeController::class, 'getLivreurLocation'])->where('commande', '[0-9]+')->name('partenaire.commandes.livreur_location');
         
         // Routes de livraison par le partenaire
         Route::patch('/commandes/{commande}/livraison/statut', [\App\Http\Controllers\Partenaire\CommandeController::class, 'updateLivraisonStatut'])->name('partenaire.commandes.livraison.update');

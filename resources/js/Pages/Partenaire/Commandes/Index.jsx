@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, useForm, router, Link } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import L from 'leaflet';
@@ -244,6 +244,11 @@ export default function Index({ auth, commandes, flash }) {
                                                             </div>
                                                         ) : (
                                                             <div className="flex flex-col items-end space-y-2">
+                                                                {commande.livraison && (
+                                                                    <Link href={route('partenaire.commandes.suivi_livraison', commande.id)} className="inline-flex items-center px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded shadow-sm transition">
+                                                                        📍 Suivi Livraison
+                                                                    </Link>
+                                                                )}
                                                                 {auth.user.propre_service_livraison && (commande.statut === 'acceptee' || commande.statut === 'en_livraison') && (
                                                                     <>
                                                                         <button onClick={() => setMapModalId(commande.id)} className="inline-flex items-center px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded shadow-sm transition">

@@ -1,66 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
-import 'leaflet-routing-machine';
 import { motion } from 'framer-motion';
 
 export default function Show({ auth, commande, flash }) {
-    const mapRef = useRef(null);
-    const mapInstance = useRef(null);
-    const markerLivreur = useRef(null);
     const { post: postForm, processing } = useForm();
 
-    // Map initialization for tracking
-    useEffect(() => {
-        if (commande.statut === 'en_livraison' && commande.livraison?.livreur && mapRef.current) {
-            const livreurLat = commande.livraison.livreur.latitude;
-            const livreurLng = commande.livraison.livreur.longitude;
-            const clientLat = commande.repere.latitude;
-            const clientLng = commande.repere.longitude;
-
-            if (livreurLat && livreurLng && clientLat && clientLng) {
-                mapInstance.current = L.map(mapRef.current).setView([livreurLat, livreurLng], 14);
-
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap'
-                }).addTo(mapInstance.current);
-
-                const routingControl = L.Routing.control({
-                    waypoints: [
-                        L.latLng(livreurLat, livreurLng),
-                        L.latLng(clientLat, clientLng)
-                    ],
-                    routeWhileDragging: false,
-                    addWaypoints: false,
-                    fitSelectedRoutes: true,
-                    show: false,
-                    lineOptions: { styles: [{ color: '#2563eb', weight: 6 }] }
-                }).addTo(mapInstance.current);
-
-                const interval = setInterval(() => {
-                    fetch(route('commandes.livreur_location', commande.id))
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.latitude && data.longitude) {
-                                routingControl.setWaypoints([
-                                    L.latLng(data.latitude, data.longitude),
-                                    L.latLng(clientLat, clientLng)
-                                ]);
-                            }
-                        })
-                        .catch(err => console.error('Erreur tracking:', err));
-                }, 20000);
-
-                return () => {
-                    clearInterval(interval);
-                    mapInstance.current?.remove();
-                };
-            }
-        }
-    }, [commande]);
 
     const getStatusText = (statut) => {
         switch (statut) {
@@ -98,64 +43,21 @@ export default function Show({ auth, commande, flash }) {
                                 </div>
                             </div>
 
-                            {/* Tracking Livreur */}
+                            {/* Lien vers le Suivi Livreur */}
                             {commande.livraison && (
-                                <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-lg mb-8">
-                                    <h4 className="text-blue-900 font-bold text-lg mb-4 flex items-center">
-                                        <span className="mr-2">🚚</span> Suivi de livraison
-                                    </h4>
-                                    
-                                    <div className="relative">
-                                        <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-blue-200">
-                                            <div style={{ width: commande.livraison.statut_livraison === 'en_attente' ? '33%' : (commande.livraison.statut_livraison === 'en_route' ? '66%' : '100%') }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-600 transition-all duration-500"></div>
-                                        </div>
-                                        <div className="flex justify-between text-xs text-blue-800 font-medium">
-                                            <span>Livreur assigné</span>
-                                            <span>En route vers vous</span>
-                                            <span>Livrée</span>
-                                        </div>
+                                <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-lg mb-8 flex justify-between items-center">
+                                    <div>
+                                        <h4 className="text-blue-900 font-bold text-lg flex items-center">
+                                            <span className="mr-2">🚚</span> Livraison assignée
+                                        </h4>
+                                        <p className="text-blue-800 text-sm mt-1">Votre commande a été prise en charge par un livreur.</p>
                                     </div>
-                                    
-                                    <div className="mt-4 flex items-center bg-white p-3 rounded shadow-sm">
-                                        <div className="bg-gray-200 rounded-full h-10 w-10 flex items-center justify-center text-gray-500 font-bold text-xl mr-3">
-                                            {commande.livraison?.livreur?.name?.charAt(0) ?? '?'}
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-gray-900">Livreur : {commande.livraison?.livreur?.name ?? 'En cours d\'assignation...'}</p>
-                                            <p className="text-sm text-gray-600 flex items-center">
-                                                📞 {commande.livraison?.livreur?.telephone ?? '-'}
-                                            </p>
-                                            {commande.livraison?.livreur?.moyen_transport && (
-                                                <p className="text-sm text-gray-600 flex items-center mt-1">
-                                                    🏍️ {commande.livraison.livreur.moyen_transport}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {commande.statut === 'en_livraison' && (
-                                        <div className="mt-6">
-                                            <h5 className="font-bold text-gray-900 mb-2">Suivi GPS du livreur</h5>
-                                            <div ref={mapRef} className="w-full h-[300px] rounded border bg-gray-100 relative z-0">
-                                                {!(commande.livraison.livreur?.latitude && commande.livraison.livreur?.longitude) && (
-                                                    <div className="flex items-center justify-center h-full text-gray-500">Position du livreur non disponible pour le moment.</div>
-                                                )}
-                                            </div>
-                                            
-                                            <div className="mt-6 text-center">
-                                                <button 
-                                                    onClick={() => postForm(route('commandes.confirmer_reception', commande.id))}
-                                                    disabled={processing}
-                                                    className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition transform hover:-translate-y-0.5 text-lg disabled:opacity-50"
-                                                >
-                                                    {processing ? 'Confirmation en cours...' : 'Confirmer la réception de la commande'}
-                                                </button>
-                                                <p className="text-sm text-gray-500 mt-2">
-                                                    Cliquez ici uniquement lorsque le livreur vous a remis la commande.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    )}
+                                    <Link 
+                                        href={route('commandes.suivi_livraison', commande.id)}
+                                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow transition"
+                                    >
+                                        Suivre ma livraison &rarr;
+                                    </Link>
                                 </div>
                             )}
 

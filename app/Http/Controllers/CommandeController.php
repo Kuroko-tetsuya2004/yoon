@@ -18,13 +18,30 @@ class CommandeController extends Controller
         return inertia('Commandes/Index', ['commandes' => $commandes]);
     }
 
-    public function show(Commande $commande)
+    public function show(Request $request, Commande $commande)
     {
-        if ($commande->client_id !== auth()->id()) {
+        if ($commande->client_id !== $request->user()->id) {
             abort(403);
         }
-        $commande->load(['gaz', 'pondereux', 'materiel', 'repere', 'livraison.livreur']);
+
+        $commande->load(['repere', 'gaz', 'pondereux', 'materiel', 'evenementielle.prestations.produit', 'livraison.livreur']);
+
         return inertia('Commandes/Show', ['commande' => $commande]);
+    }
+
+    public function suiviLivraison(Request $request, Commande $commande)
+    {
+        if ($commande->client_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        if (!$commande->livraison) {
+            return redirect()->route('commandes.show', $commande->id)->with('error', 'Aucune livraison assignée pour cette commande.');
+        }
+
+        $commande->load(['repere', 'livraison.livreur']);
+
+        return inertia('Commandes/SuiviLivraison', ['commande' => $commande]);
     }
 
     public function getLivreurLocation(Commande $commande)

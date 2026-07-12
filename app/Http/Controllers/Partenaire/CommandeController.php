@@ -220,4 +220,59 @@ class CommandeController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    public function suiviLivraison(Request $request, Commande $commande)
+    {
+        if ($request->user()->role !== 'partenaire') abort(403);
+
+        $partenaireId = $request->user()->id;
+        $isOwner = false;
+
+        if ($commande->gaz && $commande->gaz->partenaire_id === $partenaireId) $isOwner = true;
+        if ($commande->pondereux && $commande->pondereux->partenaire_id === $partenaireId) $isOwner = true;
+        if ($commande->materiel && $commande->materiel->partenaire_id === $partenaireId) $isOwner = true;
+        if ($commande->type_commande === 'evenementielle' && $commande->evenementielle) {
+            if ($commande->evenementielle->prestations()->where('partenaire_id', $partenaireId)->exists()) {
+                $isOwner = true;
+            }
+        }
+
+        if (!$isOwner) abort(403);
+
+        if (!$commande->livraison) {
+            return redirect()->route('partenaire.commandes.index')->with('error', 'Aucune livraison assignée pour cette commande.');
+        }
+
+        $commande->load(['repere', 'livraison.livreur', 'client']);
+
+        return inertia('Partenaire/Commandes/SuiviLivraison', ['commande' => $commande]);
+    }
+
+    public function getLivreurLocation(Request $request, Commande $commande)
+    {
+        if ($request->user()->role !== 'partenaire') abort(403);
+
+        $partenaireId = $request->user()->id;
+        $isOwner = false;
+
+        if ($commande->gaz && $commande->gaz->partenaire_id === $partenaireId) $isOwner = true;
+        if ($commande->pondereux && $commande->pondereux->partenaire_id === $partenaireId) $isOwner = true;
+        if ($commande->materiel && $commande->materiel->partenaire_id === $partenaireId) $isOwner = true;
+        if ($commande->type_commande === 'evenementielle' && $commande->evenementielle) {
+            if ($commande->evenementielle->prestations()->where('partenaire_id', $partenaireId)->exists()) {
+                $isOwner = true;
+            }
+        }
+
+        if (!$isOwner) abort(403);
+
+        if (!$commande->livraison || !$commande->livraison->livreur) {
+            return response()->json(['error' => 'Livreur introuvable'], 404);
+        }
+
+        return response()->json([
+            'latitude' => $commande->livraison->livreur->latitude,
+            'longitude' => $commande->livraison->livreur->longitude,
+        ]);
+    }
 }
