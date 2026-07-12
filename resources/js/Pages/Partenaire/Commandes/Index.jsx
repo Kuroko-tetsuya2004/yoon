@@ -190,6 +190,17 @@ export default function Index({ auth, commandes, flash }) {
                                                                     )}
                                                                 </div>
                                                             </div>
+                                                        ) : (commande.propositions && commande.propositions.length > 0) ? (
+                                                            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 animate-pulse">
+                                                                ⏳ Proposition en cours...
+                                                            </span>
+                                                        ) : commande.statut === 'acceptee' ? (
+                                                            <button
+                                                                onClick={() => router.post(route('partenaire.commandes.assigner_livreur', commande.id))}
+                                                                className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-bold rounded-lg text-white bg-orange-500 hover:bg-orange-600 transition shadow-sm"
+                                                            >
+                                                                🔍 Chercher un livreur
+                                                            </button>
                                                         ) : (
                                                             <span className="text-gray-400 text-xs italic">Non assigné</span>
                                                         )}

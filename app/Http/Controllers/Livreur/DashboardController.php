@@ -289,7 +289,11 @@ class DashboardController extends Controller
         $user->longitude = $request->longitude;
         $user->save();
 
-        broadcast(new \App\Events\LocationUpdated($user->id, $user->latitude, $user->longitude))->toOthers();
+        try {
+            broadcast(new \App\Events\LocationUpdated($user->id, $user->latitude, $user->longitude))->toOthers();
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Livreur broadcast failed: ' . $e->getMessage());
+        }
 
         return response()->json(['success' => true]);
     }

@@ -33,6 +33,9 @@ export default function Location({ auth }) {
     const [isLocating, setIsLocating] = useState(false);
 
     useEffect(() => {
+        // BUG-10 Fix: guard contre double initialisation en React Strict Mode
+        if (mapInstance.current) return;
+
         // Initialiser la carte Leaflet
         mapInstance.current = L.map(mapRef.current).setView([initialLat, initialLng], 13);
 

@@ -55,4 +55,10 @@ class Commande extends Model
     {
         return $this->hasMany(PropositionLivraison::class);
     }
+
+    // Alias court utilisé dans les eager loads partenaire
+    public function propositions()
+    {
+        return $this->hasMany(PropositionLivraison::class);
+    }
 }

@@ -197,8 +197,9 @@ class LivraisonService
                 \Illuminate\Support\Facades\Log::error("LivraisonService: Echec de diffusion broadcast NouvellePropositionLivraison: " . $e->getMessage());
             }
             
-            // Dispatch du job pour expirer la proposition après 1 minute
-            \App\Jobs\ExpirePropositionJob::dispatch($proposition->id)->delay(now()->addMinute());
+            // Sans worker de queue sur Render, on utilise dispatchSync pour expiration directe
+            // Si un worker est ajouté à l'avenir, remplacer par: ExpirePropositionJob::dispatch($proposition->id)->delay(now()->addMinute());
+            \App\Jobs\ExpirePropositionJob::dispatchSync($proposition->id);
             
             return true;
         }

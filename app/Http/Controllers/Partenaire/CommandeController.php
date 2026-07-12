@@ -40,7 +40,9 @@ class CommandeController extends Controller
         $commandes = Commande::whereIn('id', $allCommandeIds)
             ->with(['client', 'repere', 'gaz', 'pondereux', 'materiel', 'evenementielle.prestations' => function($query) use ($partenaireId) {
                 $query->where('partenaire_id', $partenaireId)->with('produit');
-            }, 'livraison.livreur'])
+            }, 'livraison.livreur', 'propositions' => function($query) {
+                $query->where('statut', 'en_attente');
+            }])
             ->latest()
             ->get();
 
@@ -50,6 +52,8 @@ class CommandeController extends Controller
     public function valider(Request $request, Commande $commande)
     {
         if ($request->user()->role !== 'partenaire') abort(403);
+        // RISK-04 Fix: Un partenaire suspendu ne peut pas valider
+        if ($request->user()->statut_validation !== 'valide') abort(403, 'Votre compte partenaire est suspendu ou en attente.');
 
         $partenaireId = $request->user()->id;
         $isOwner = false;
@@ -285,5 +289,32 @@ class CommandeController extends Controller
             'latitude' => $commande->livraison->livreur->latitude,
             'longitude' => $commande->livraison->livreur->longitude,
         ]);
+    }
+
+    public function assignerLivreur(Request $request, Commande $commande)
+    {
+        if ($request->user()->role !== 'partenaire') abort(403);
+
+        $partenaireId = $request->user()->id;
+        $isOwner = false;
+
+        if ($commande->gaz && $commande->gaz->partenaire_id === $partenaireId) $isOwner = true;
+        if ($commande->pondereux && $commande->pondereux->partenaire_id === $partenaireId) $isOwner = true;
+        if ($commande->materiel && $commande->materiel->partenaire_id === $partenaireId) $isOwner = true;
+        if ($commande->type_commande === 'evenementielle' && $commande->evenementielle) {
+            if ($commande->evenementielle->prestations()->where('partenaire_id', $partenaireId)->exists()) {
+                $isOwner = true;
+            }
+        }
+
+        if (!$isOwner) abort(403);
+
+        $success = \App\Services\LivraisonService::assignerLivreurProche($commande);
+
+        if ($success) {
+            return back()->with('success', 'Recherche lancée ! Une proposition a été envoyée au livreur le plus proche.');
+        }
+
+        return back()->with('error', 'Aucun livreur disponible pour le moment. Veuillez vérifier que des livreurs sont validés et configurés disponibles.');
     }
 }

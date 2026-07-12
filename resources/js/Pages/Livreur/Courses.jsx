@@ -44,7 +44,9 @@ function CoursesContent({ auth, livraisons: livraisonsRaw, proposition, partenai
 
     // ── Initialisation de la carte Leaflet ──────────────────────────────────
     useEffect(() => {
-        if (!mapInstance.current && mapRef.current && livraisons.length > 0) {
+        // BUG-09 Fix: initialiser inconditionnellement au montage pour que la carte
+        // soit prête quand une livraison arrive via polling
+        if (!mapInstance.current && mapRef.current) {
             mapInstance.current = L.map(mapRef.current).setView([14.6928, -17.4467], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap'
@@ -61,7 +63,7 @@ function CoursesContent({ auth, livraisons: livraisonsRaw, proposition, partenai
                 mapInstance.current = null;
             }
         };
-    }, [livraisons.length]);
+    }, []);
 
     // ── Géolocalisation: envoi de position toutes les 30s ───────────────────
     useEffect(() => {

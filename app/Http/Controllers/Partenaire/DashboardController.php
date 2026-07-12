@@ -92,10 +92,6 @@ class DashboardController extends Controller
     public function showLocation(Request $request)
     {
         if ($request->user()->role !== 'partenaire') abort(403);
-        return inertia('Partenaire/Location', [
-            'auth' => [
-                'user' => $request->user(),
-            ]
-        ]);
+        return inertia('Partenaire/Location');
     }
 }

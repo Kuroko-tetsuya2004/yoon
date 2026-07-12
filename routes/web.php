@@ -70,6 +70,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/commandes/{commande}/confirmer-retour', [\App\Http\Controllers\Partenaire\CommandeController::class, 'confirmerRetour'])->where('commande', '[0-9]+')->name('commandes.confirmer_retour');
         Route::patch('/commandes/{commande}/confirmer-recuperation', [\App\Http\Controllers\Partenaire\CommandeController::class, 'confirmerRecuperation'])->name('commandes.confirmer_recuperation');
         Route::get('/commandes/{commande}/livraison', [\App\Http\Controllers\Partenaire\CommandeController::class, 'suiviLivraison'])->where('commande', '[0-9]+')->name('commandes.suivi_livraison');
+        Route::post('/commandes/{commande}/assigner-livreur', [\App\Http\Controllers\Partenaire\CommandeController::class, 'assignerLivreur'])->where('commande', '[0-9]+')->name('commandes.assigner_livreur');
         Route::get('/commandes/{commande}/livreur-location', [\App\Http\Controllers\Partenaire\CommandeController::class, 'getLivreurLocation'])->where('commande', '[0-9]+')->name('commandes.livreur_location');
         
         // Routes de livraison par le partenaire
@@ -115,55 +116,59 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 require __DIR__.'/auth.php';
 
-Route::get('/sys/clear-cache', function () {
-    \Illuminate\Support\Facades\Artisan::call('cache:clear');
-    \Illuminate\Support\Facades\Artisan::call('config:clear');
-    \Illuminate\Support\Facades\Artisan::call('view:clear');
-    \Illuminate\Support\Facades\Artisan::call('route:clear');
-    return 'Cache cleared successfully.';
-});
+Route::middleware(['auth'])->prefix('sys')->group(function () {
+    Route::get('/clear-cache', function () {
+        if (auth()->user()->role !== 'administrateur') abort(403);
+        \Illuminate\Support\Facades\Artisan::call('cache:clear');
+        \Illuminate\Support\Facades\Artisan::call('config:clear');
+        \Illuminate\Support\Facades\Artisan::call('view:clear');
+        \Illuminate\Support\Facades\Artisan::call('route:clear');
+        return 'Cache cleared successfully.';
+    });
 
-Route::get('/sys/fix-gps', function () {
-    $updated = \App\Models\User::where('role', 'partenaire')
-        ->where(function($q) {
-            $q->whereNull('latitude')
-              ->orWhereNull('longitude')
-              ->orWhere('latitude', 0)
-              ->orWhere('longitude', 0);
-        })
-        ->update([
-            'latitude' => 14.735,
-            'longitude' => -17.445,
-            'adresse' => 'Touba Gaz Camberene, Dakar'
-        ]);
-    return "Updated {$updated} partners with default coordinates.";
-});
+    Route::get('/fix-gps', function () {
+        if (auth()->user()->role !== 'administrateur') abort(403);
+        $updated = \App\Models\User::where('role', 'partenaire')
+            ->where(function($q) {
+                $q->whereNull('latitude')
+                  ->orWhereNull('longitude')
+                  ->orWhere('latitude', 0)
+                  ->orWhere('longitude', 0);
+            })
+            ->update([
+                'latitude' => 14.735,
+                'longitude' => -17.445,
+                'adresse' => 'Touba Gaz Camberene, Dakar'
+            ]);
+        return "Updated {$updated} partners with default coordinates.";
+    });
 
-Route::get('/sys/reset-commandes', function () {
-    try {
-        \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
-        
-        \Illuminate\Support\Facades\DB::table('litiges')->truncate();
-        \Illuminate\Support\Facades\DB::table('proposition_livraisons')->truncate();
-        \Illuminate\Support\Facades\DB::table('livraisons')->truncate();
-        \Illuminate\Support\Facades\DB::table('commande_evenementielles')->truncate();
-        \Illuminate\Support\Facades\DB::table('commande_gazs')->truncate();
-        \Illuminate\Support\Facades\DB::table('commande_materiels')->truncate();
-        \Illuminate\Support\Facades\DB::table('commande_pondereuxes')->truncate();
-        \Illuminate\Support\Facades\DB::table('commandes')->truncate();
-        
-        \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
-        return 'Toutes les commandes, livraisons et litiges ont été supprimés de la base de données avec succès.';
-    } catch (\Exception $e) {
-        return 'Erreur lors de la suppression : ' . $e->getMessage();
-    }
-});
+    Route::get('/reset-commandes', function () {
+        if (auth()->user()->role !== 'administrateur') abort(403);
+        try {
+            \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
+            \Illuminate\Support\Facades\DB::table('litiges')->truncate();
+            \Illuminate\Support\Facades\DB::table('proposition_livraisons')->truncate();
+            \Illuminate\Support\Facades\DB::table('livraisons')->truncate();
+            \Illuminate\Support\Facades\DB::table('commande_evenementielles')->truncate();
+            \Illuminate\Support\Facades\DB::table('commande_gazs')->truncate();
+            \Illuminate\Support\Facades\DB::table('commande_materiels')->truncate();
+            \Illuminate\Support\Facades\DB::table('commande_pondereuxes')->truncate();
+            \Illuminate\Support\Facades\DB::table('commandes')->truncate();
+            \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
+            return 'Toutes les commandes, livraisons et litiges ont été supprimés de la base de données avec succès.';
+        } catch (\Exception $e) {
+            return 'Erreur lors de la suppression : ' . $e->getMessage();
+        }
+    });
 
-Route::get('/sys/delete-materiel', function () {
-    try {
-        $deleted = \App\Models\Produit::where('categorie', 'materiel')->delete();
-        return "Suppression réussie : {$deleted} produit(s) de la catégorie 'matériel' ont été supprimés.";
-    } catch (\Exception $e) {
-        return 'Erreur lors de la suppression : ' . $e->getMessage();
-    }
+    Route::get('/delete-materiel', function () {
+        if (auth()->user()->role !== 'administrateur') abort(403);
+        try {
+            $deleted = \App\Models\Produit::where('categorie', 'materiel')->delete();
+            return "Suppression réussie : {$deleted} produit(s) de la catégorie 'matériel' ont été supprimés.";
+        } catch (\Exception $e) {
+            return 'Erreur lors de la suppression : ' . $e->getMessage();
+        }
+    });
 });
