@@ -1,10 +1,39 @@
+import { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 
 export default function Index({ auth, produits, flash }) {
     const { patch, delete: destroy, post } = useForm();
     const { data, setData, post: postRestock } = useForm({ quantite: 1 });
+    const [updatingLocation, setUpdatingLocation] = useState(false);
+    const [gpsError, setGpsError] = useState(null);
+
+    const registerLocation = () => {
+        if (!navigator.geolocation) {
+            setGpsError("La géolocalisation n'est pas supportée par votre navigateur.");
+            return;
+        }
+        setUpdatingLocation(true);
+        setGpsError(null);
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                router.post(route('partenaire.location.update'), {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude
+                }, {
+                    preserveScroll: true,
+                    onFinish: () => setUpdatingLocation(false),
+                    onSuccess: () => setGpsError(null)
+                });
+            },
+            (err) => {
+                setUpdatingLocation(false);
+                setGpsError("Impossible de récupérer votre position GPS. Veuillez autoriser l'accès à la localisation.");
+                console.error(err);
+            }
+        );
+    };
 
     const toggleStatus = (id) => {
         patch(route('partenaire.produits.toggle-status', id));
@@ -31,8 +60,40 @@ export default function Index({ auth, produits, flash }) {
             <Head title="Mon Catalogue" />
 
             <div className="pb-12 pt-2 sm:pt-6">
-                <div className="w-full">
-                    
+                <div className="w-full space-y-6">
+                    {/* Module de Géolocalisation Boutique */}
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div>
+                                <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+                                    📍 Localisation GPS de votre boutique
+                                </h3>
+                                {auth.user.latitude && auth.user.longitude ? (
+                                    <p className="text-sm text-emerald-600 mt-1">
+                                        Position enregistrée : <span className="font-bold">{Number(auth.user.latitude).toFixed(5)}, {Number(auth.user.longitude).toFixed(5)}</span> ({auth.user.adresse || 'Adresse textuelle non définie'})
+                                    </p>
+                                ) : (
+                                    <p className="text-sm text-rose-600 mt-1">
+                                        ⚠️ Votre boutique n'est pas encore géolocalisée. Vos livraisons ne pourront pas être assignées automatiquement !
+                                    </p>
+                                )}
+                                {gpsError && (
+                                    <p className="text-sm text-red-500 mt-2 font-medium">❌ {gpsError}</p>
+                                )}
+                            </div>
+                            <button
+                                disabled={updatingLocation}
+                                onClick={registerLocation}
+                                className={`w-full sm:w-auto font-bold py-2.5 px-5 rounded-xl shadow transition flex items-center justify-center gap-2 ${
+                                    auth.user.latitude && auth.user.longitude
+                                        ? 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                                        : 'bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/20'
+                                }`}
+                            >
+                                {updatingLocation ? 'Enregistrement...' : 'Enregistrer ma position GPS actuelle'}
+                            </button>
+                        </div>
+                    </div>
                     
 
                     

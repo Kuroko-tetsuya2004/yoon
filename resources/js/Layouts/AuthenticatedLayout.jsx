@@ -28,7 +28,8 @@ export default function AuthenticatedLayout({ header, children }) {
             );
         } else if (auth.user.role === 'partenaire') {
             links.push(
-                { name: 'Mon Catalogue', href: route('partenaire.produits.index'), active: route().current('partenaire.produits.*') || route().current('partenaire.dashboard'), icon: '🏷️' },
+                { name: 'Tableau de bord', href: route('partenaire.dashboard'), active: route().current('partenaire.dashboard'), icon: '📊' },
+                { name: 'Mon Catalogue', href: route('partenaire.produits.index'), active: route().current('partenaire.produits.*'), icon: '🏷️' },
                 { name: 'Commandes Reçues', href: route('partenaire.commandes.index'), active: route().current('partenaire.commandes.*'), icon: '🛒' }
             );
         } else if (auth.user.role === 'livreur') {
