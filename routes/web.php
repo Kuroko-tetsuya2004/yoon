@@ -136,3 +136,23 @@ Route::get('/sys/fix-gps', function () {
         ]);
     return "Updated {$updated} partners with default coordinates.";
 });
+
+Route::get('/sys/reset-commandes', function () {
+    try {
+        \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
+        
+        \Illuminate\Support\Facades\DB::table('litiges')->truncate();
+        \Illuminate\Support\Facades\DB::table('proposition_livraisons')->truncate();
+        \Illuminate\Support\Facades\DB::table('livraisons')->truncate();
+        \Illuminate\Support\Facades\DB::table('commande_evenementielles')->truncate();
+        \Illuminate\Support\Facades\DB::table('commande_gazs')->truncate();
+        \Illuminate\Support\Facades\DB::table('commande_materiels')->truncate();
+        \Illuminate\Support\Facades\DB::table('commande_pondereuxes')->truncate();
+        \Illuminate\Support\Facades\DB::table('commandes')->truncate();
+        
+        \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
+        return 'Toutes les commandes, livraisons et litiges ont été supprimés de la base de données avec succès.';
+    } catch (\Exception $e) {
+        return 'Erreur lors de la suppression : ' . $e->getMessage();
+    }
+});
